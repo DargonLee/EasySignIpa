@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import argparse
+from vsscli import vsscli
+
+version = "v2.0.0"
+
+def main():
+    parser = argparse.ArgumentParser(description="VSS 命令行工具 {}".format(version))
+    parser.add_argument("-v", "--version", help="版本号", action="store_true")
+    parser.add_argument("-init", "--init_repo", help="初始化私有repo环境", action="store_true")
+    parser.add_argument("-c", "--create", help="创建模版工程", type=str)
+    parser.add_argument("-u", "--upload", help="更新项目到私有仓库", type=str)
+    parser.add_argument("-pv", "--public_vss", help="发布Vss，参数为要发布的版本号", type=str)
+    parser.add_argument("-pc", "--public_component", help="一键发布组件库版本", type=str)
+    parser.add_argument("-s", "--sign", help="重签Debug的ipa包并安装到手机上", type=str)
+    parser.add_argument("-vss", "--vss", help="注入Vss到重签App中", action="store_true")
+    parser.add_argument("-o", "--create_ipa", help="生成ipa文件包", action="store_true")
+    parser.add_argument(
+        "-r", "--release", help="重签Release的ipa包并安装到手机上", action="store_true"
+    )
+    parser.add_argument("-rb", "--reinstall", help="卸载当前App再重新安装", action="store_true")
+    parser.add_argument("-la", "--listapp", help="列举出手机安装的所有App信息", action="store_true")
+
+    args = parser.parse_args()
+    if len(sys.argv) == 1:
+        parser.print_help()
+
+    # print(args);
+    # print(sys.argv[1])
+
+    if args.version:
+        print(version)
+
+    if args.init_repo:
+        vsscli.init_cocoapods_repo(args.init_repo)
+
+    if args.create:
+        vsscli.create_temlate(args.create)
+
+    if args.upload:
+        vsscli.upload_cocoapods(args.upload)
+
+    if args.public_component:
+        vsscli.public_all_component(args.public_component)
+
+    if args.public_vss:
+        vsscli.publich_vss(args.public_vss)
+
+    if args.sign:
+        dylibs = []
+        if args.vss:
+            dylibs.append("Vss")
+        vsscli.do_resign(
+            args.sign, args.release, args.reinstall, dylibs, args.create_ipa
+        )
+
+    if args.listapp:
+        vsscli.listApplicationDir(args.listapp)
+
+
+if __name__ == "__main__":
+    main()
