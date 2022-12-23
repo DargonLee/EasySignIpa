@@ -23,6 +23,7 @@
 # def treset():
 #     return "\033[0m"
 
+
 class Logger:
     HEADER = "\033[95m"
     BLUE = "\033[94m"
@@ -32,20 +33,27 @@ class Logger:
     WHITE = "\033[97m"
     CYAN = "\033[36m"
     END = "\033[0m"
+
     def __init__(self):
         print("init tool")
+
     def cyan(msg):
         print(Logger.CYAN + msg + Logger.END)
+
     def blue(msg):
         print(Logger.BLUE + msg + Logger.END)
+
     def white(msg):
         print(Logger.WHITE + msg + Logger.END)
+
     @staticmethod
     def red(msg):
         print(Logger.RED + msg + Logger.END)
+
     @staticmethod
     def green(msg):
         print(Logger.GREEN + msg + Logger.END)
+
     @staticmethod
     def yellow(msg):
         print(Logger.YELLOW + msg + Logger.END)
@@ -117,7 +125,6 @@ class Logger:
 #                 flag = True
 #
 #         return {"file_name": fz_name, "flag": flag}
-
 
 # end if unzip ------------------------------
 

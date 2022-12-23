@@ -24,6 +24,7 @@ dev_entitlements = "dev_entitlements.plist"
 dis_entitlements = "dis_entitlements.plist"
 EMBEDDED_ENTITLEMENTS = "entitlements.plist"
 
+
 ################################【初始化组件索引库】#################################
 def init_cocoapods_repo(init_args):
     # init_args = True
@@ -510,9 +511,12 @@ def publich_vss(version):
         os.chdir(target_path)
     else:
         print("此次发布已取消")
+
+
 ################################【frida】#################################
 def frida_listApplicationDir(args):
     listApplicationDir(args)
+
 
 def _execute_shell(command_string):
     subprocess.call(command_string, shell=True)

@@ -11,6 +11,7 @@ script_dir = os.path.join(root_dir, "js/")
 # App.js文件
 APP_JS = os.path.join(script_dir, "app.js")
 
+
 # 获取第一个USB连接的设备
 def get_usb_iphone():
     dManger = frida.get_device_manager()
