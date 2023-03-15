@@ -25,6 +25,10 @@ def main():
     parser.add_argument("-la", "--listapp", help="列举出手机安装的所有App信息", action="store_true")
 
     args = parser.parse_args()
+    command.check_run_env(args)
+    while (not command.check_run_env(args)):
+        pass
+    exit(0)
     if len(sys.argv) == 1:
         parser.print_help()
 

@@ -5,6 +5,7 @@ import os
 import getpass
 import shutil
 import subprocess
+import configparser
 from .exec_tool import Logger
 from .exec_frida import listApplicationDir
 
@@ -12,6 +13,8 @@ out_str = "/Out/"
 package_file_name = "PackageConfig.json"
 user_name = getpass.getuser()
 vsscli_dir = "/Users/" + user_name + "/.vss_cli/"
+config_path = os.path.join(vsscli_dir, 'settings.ini')
+config_path = '../regign/settings.ini'
 debug_codesigning_identity = "34B2B4FAF71A01ABDFF8E7D4BF7B147B6BDC1740"
 release_codesigning_identity = "BFA68156479D4CA4F0FFE98B4188862FEC3CA259"
 CODESIGNING_IDENTITY = debug_codesigning_identity
@@ -23,6 +26,41 @@ EMBEDDED_MOBILEPROVISION = dev_embedded
 dev_entitlements = "dev_entitlements.plist"
 dis_entitlements = "dis_entitlements.plist"
 EMBEDDED_ENTITLEMENTS = "entitlements.plist"
+
+
+################################【运行检测】#################################
+def check_run_env(args):
+    config_path = '/Users/apple/Desktop/WorkSpace/vss/build/lib/settings.ini'
+    config = configparser.ConfigParser()
+    config.read(config_path, encoding='utf-8-sig')
+
+    sign_identity = config.get('USER', 'debug_codesigning_identity')
+    if not sign_identity:
+        _execute_shell("security find-identity -v -p codesigning")
+        sign_identity = input('请输入证书identitie值:')
+        config.set('USER', 'debug_codesigning_identity', sign_identity)
+        with open(config_path, 'w', encoding='utf-8-sig')as f:
+            config.write(f)
+        return False
+
+    up_path = config.get('USER', 'upgrade_path')
+    if not up_path:
+        up_path = input('请输入仓库文件夹路径:')
+        config.set('USER', 'upgrade_path', up_path)
+        with open(config_path, 'w', encoding='utf-8-sig')as f:
+            config.write(f)
+        return False
+
+    embedded_path = config.get('USER', 'embedded_mobileprovision_path')
+    if not embedded_path:
+        embedded_path = input('请输入描述文件路径:')
+        config.set('USER', 'embedded_mobileprovision_path', embedded_path)
+        with open(config_path, 'w', encoding='utf-8-sig')as f:
+            config.write(f)
+        if os.path.exists(embedded_path):
+            shutil.copy(embedded_path, os.path.join(vsscli_dir, dev_embedded))
+
+    return True
 
 
 ################################【初始化组件索引库】#################################
