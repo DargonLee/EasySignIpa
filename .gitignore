@@ -26,6 +26,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# custom
 vss_cli.egg-info/
 
 # PyInstaller
