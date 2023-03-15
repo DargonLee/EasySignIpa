@@ -2,7 +2,7 @@ import threading
 import frida
 import codecs
 import os
-from vsscli.exec_tool import Logger
+from esign.exec_tool import Logger
 
 # 根目录
 root_dir = os.path.dirname(os.path.realpath(__file__))

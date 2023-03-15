@@ -3,7 +3,7 @@
 
 import sys
 import argparse
-from vsscli import vsscli
+from esign import esign
 
 version = "v2.0.0"
 
@@ -29,6 +29,7 @@ def main():
     while (not command.check_run_env(args)):
         pass
     exit(0)
+
     if len(sys.argv) == 1:
         parser.print_help()
 
@@ -39,30 +40,30 @@ def main():
         print(version)
 
     if args.init_repo:
-        vsscli.init_cocoapods_repo(args.init_repo)
+        esign.init_cocoapods_repo(args.init_repo)
 
     if args.create:
-        vsscli.create_temlate(args.create)
+        esign.create_temlate(args.create)
 
     if args.upload:
-        vsscli.upload_cocoapods(args.upload)
+        esign.upload_cocoapods(args.upload)
 
     if args.public_component:
-        vsscli.public_all_component(args.public_component)
+        esign.public_all_component(args.public_component)
 
     if args.public_vss:
-        vsscli.publich_vss(args.public_vss)
+        esign.publich_vss(args.public_vss)
 
     if args.sign:
         dylibs = []
         if args.vss:
             dylibs.append("Vss")
-        vsscli.do_resign(
+        esign.do_resign(
             args.sign, args.release, args.reinstall, dylibs, args.create_ipa
         )
 
     if args.listapp:
-        vsscli.listApplicationDir(args.listapp)
+        esign.listApplicationDir(args.listapp)
 
 
 if __name__ == "__main__":

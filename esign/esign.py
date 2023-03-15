@@ -12,7 +12,7 @@ from .exec_frida import listApplicationDir
 out_str = "/Out/"
 package_file_name = "PackageConfig.json"
 user_name = getpass.getuser()
-vsscli_dir = "/Users/" + user_name + "/.vss_cli/"
+vsscli_dir = "/Users/" + user_name + "/.esign/"
 config_path = os.path.join(vsscli_dir, 'settings.ini')
 config_path = '../regign/settings.ini'
 debug_codesigning_identity = "34B2B4FAF71A01ABDFF8E7D4BF7B147B6BDC1740"
