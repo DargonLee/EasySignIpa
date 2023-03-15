@@ -10,7 +10,7 @@ setup(
     ],
     scripts=['bin/esign'],
     package_data={
-        '':['js/*.js']
+        '':['js/*.js', 'conf/*.ini', 'bin/*']
     },
     # entry_points={
     #     "console_scripts": [
