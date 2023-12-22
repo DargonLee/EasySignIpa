@@ -20,7 +20,7 @@ class EZipFile:
                     print(fromddr + os.sep + fileObj, archName)
                     zipObj.write(fromddr + os.sep + fileObj, arcname=archName)
                 else:
-                    EZipFile.writInto(zipObj, fromddr + os.sep + fileObj, basePathName)
+                    EZipFile._writInto(zipObj, fromddr + os.sep + fileObj, basePathName)
 
     @staticmethod
     def zip_file(fromddr, toAddr):
@@ -35,7 +35,7 @@ class EZipFile:
             EZipFile._writInto(zipObj, fromddr, basePathName)
             zipObj.close()
         else:
-            EZipFile.writInto(zipObj, fromddr, fromddr)
+            EZipFile._writInto(zipObj, fromddr, fromddr)
             zipObj.close()
 
     @staticmethod
@@ -57,4 +57,11 @@ class EZipFile:
 
 
 if __name__ == "__main__":
-    print(EZipFile.zip_file("/User/Lee/Desktop/1", "/User/Lee/Desktop/1.zip"))
+    # EZipFile.zip_file(
+    #     "/Users/apple/Downloads/template-python-main",
+    #     "/Users/apple/Downloads/template.zip",
+    # )
+
+    EZipFile.unzip_file(
+        "/Users/apple/Downloads/template.zip", "/Users/apple/Downloads/template"
+    )
