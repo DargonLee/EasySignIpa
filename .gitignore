@@ -28,7 +28,7 @@ share/python-wheels/
 MANIFEST
 
 # custom
-vss_cli.egg-info/
+esign.egg-info/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
