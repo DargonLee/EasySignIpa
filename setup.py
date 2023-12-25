@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="esign",
-    description="A command-line tool for re-signing IPA files",
+    description="A command-line tool for re-signing iOS IPA files",
     version="1.0.0",
     license="MIT",
     author="Harlans",
@@ -11,7 +11,7 @@ setup(
     python_requires=">=3.7",
     include_package_data=True,
     packages=find_packages(),
-    package_data={"": ["conf/*.ini", "bin/*"]},
+    package_data={"": ["config/*.ini", "bin/*"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

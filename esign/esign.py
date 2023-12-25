@@ -3,8 +3,6 @@ import getpass
 import shutil
 import subprocess
 import configparser
-from pathlib import Path
-import re
 from esign.elogger import Logger
 
 
@@ -329,67 +327,3 @@ def _codesign_dylib(dst):
 def _execute_shell(command_string):
     subprocess.call(command_string, shell=True)
     # os.system(command_string)
-
-
-def xml_from_mp_text(mp_text: str):
-    """
-    从mobileprovision文件内容里，提取出plist部分的字符串；
-    效果如同以下命令：
-        security cms -D -i embedded.mobileprovision > temp.plist
-
-    :param mp_text: mobileprovision文件内容
-    :return: plist部分的字符串内容
-    """
-    p_start = re.escape("<?xml")
-    p_end = re.escape("</plist>")
-    pattern_str = f"{p_start}.+{p_end}"
-    result = re.search(pattern_str, mp_text, flags=re.DOTALL)
-    xml_content = result.group()
-    return xml_content
-
-
-def content(file_path):
-    """
-    从mobileprovision文件里提取出plist部分的字符串内容；
-    效果如同以下命令：
-        security cms -D -i embedded.mobileprovision > temp.plist
-
-    :param file_path: mobileprovision文件路径
-    :return: plist部分的字符串内容
-    """
-    file_content = Path(file_path).read_text(encoding="ascii", errors="ignore")
-    return xml_from_mp_text(file_content)
-
-
-def get_app_id(file_path):
-    """
-    从mobileprovision文件里提取出AppID；
-    效果如同以下命令：
-        security cms -D -i embedded.mobileprovision > temp.plist
-        /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" temp.plist
-
-    :param file_path: mobileprovision文件路径
-    :return: AppID
-    """
-    xml_content = content(file_path)
-    app_id = re.search(
-        "<key>application-identifier</key>\s*<string>(.+)</string>", xml_content
-    ).group(1)
-    return app_id
-
-
-def get_entitlements(file_path):
-    """
-    从mobileprovision文件里提取出Entitlements；
-    效果如同以下命令：
-        security cms -D -i embedded.mobileprovision > temp.plist
-        /usr/libexec/PlistBuddy -x -c "Print :Entitlements" temp.plist
-
-    :param file_path: mobileprovision文件路径
-    :return: Entitlements
-    """
-    xml_content = content(file_path)
-    entitlements = re.search(
-        "<key>Entitlements</key>\s*<dict>(.+)</dict>", xml_content, flags=re.DOTALL
-    ).group(1)
-    return entitlements

@@ -50,7 +50,5 @@ if __name__ == "__main__":
     print(Logger.green("I am green!"))
     print(Logger.yellow("I am yellow!"))
     print(Logger.blue("I am blue!"))
-    # print(Logger.magenta("I am magenta!"))
     print(Logger.cyan("I am cyan!"))
     print(Logger.white("I am white!"))
-    # print(Logger.white_green("I am white green!"))
