@@ -18,8 +18,11 @@ class DevCertificateModel(object):
         # 使用cer证书内置的hash算法和对应的值
         hash_algorithm = self.x509_cer.signature_hash_algorithm
         hash_value = self.x509_cer.fingerprint(hash_algorithm).hex().upper()
-        return "Common Name: {}, {}: {}".format(
-            self.common_name, hash_algorithm.name.upper(), hash_value
+        # return "Name: {}, {}: {}".format(
+        #     self.common_name, hash_algorithm.name.upper(), hash_value
+        # )
+        return "Name: {}, 'SHA-1': {} Creation Date: {}".format(
+            self.common_name, self.sha1, self.date_is_valid and "Valid" or "Invalid"
         )
 
     @property
@@ -91,6 +94,9 @@ class EProvision(object):
         self.xml_content = self._xml_from_mp_text(self._file_content)
         self.origin_info = plistlib.loads(bytes(self.xml_content, encoding="ascii"))
         self.dict_info = {k.lower(): v for k, v in self.origin_info.items()}
+
+        self._device_sets = None
+        self._dev_cer_list = None
 
     def __getitem__(self, item):
         return self.dict_info.get(item.lower(), None)
@@ -225,6 +231,13 @@ class EProvision(object):
             datetime.utcnow().timestamp() < self.expiration_timestamp
         )
 
+    def date_is_valid_str(self):
+        """
+        证书现在是否在有效日期范围内
+        :return: 有效则返回Valid
+        """
+        return self.date_is_valid() and "Valid" or "Invalid"
+
     def app_id(self, is_need_prefix=False):
         """
         标示App的bundleID，例如：com.apple.xcode
@@ -273,3 +286,5 @@ if __name__ == "__main__":
     # 使用示例
     provision = EProvision("/Users/apple/Downloads/enterprise2026.mobileprovision")
     print(provision.app_id_name)
+    # print(provision.entitlements)
+    print(provision.developer_certificates)

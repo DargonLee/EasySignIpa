@@ -213,31 +213,6 @@ def _print_app_info(info_plist_file_path):
     print("[-]ExecutableName => {}".format(executable_name))
 
 
-def _install_app(target_app_path):
-    print(Logger.green("✅ install app"))
-    print("[-]AppPath => {}".format(target_app_path))
-    install_type = "-b"
-    if IS_REINSTALL:
-        install_type = "-rb"
-    install_cmd = "{}bin/ios-deploy_new {} {}".format(
-        vsscli_dir, install_type, target_app_path
-    )
-    print("[-]".format(install_cmd))
-    os.system(install_cmd)
-
-
-def _codesign_app(target_app_path):
-    entitlements_file = vsscli_dir + EMBEDDED_ENTITLEMENTS
-    print(Logger.green("👉🏻 begin codesigning app"))
-    print("[-]AppPath => {}".format(target_app_path))
-    print("[-]CodesigningIdentity => {}".format(CODESIGNING_IDENTITY))
-    codesign_cmd = "codesign -f -s {} --entitlements {} {}".format(
-        CODESIGNING_IDENTITY, entitlements_file, target_app_path
-    )
-    codesign_cmd_result = subprocess.getoutput(codesign_cmd)
-    print("{}".format(codesign_cmd_result))
-
-
 def _inject_dylib(dylibs, info_plist_file_path, target_app_path):
     # /usr/libexec/PlistBuddy -c "Print :CFBundleName" "${INFOPLIST}"
     # optool install -c load -p "@executable_path/RedEnvelop.dylib" -t WeChat
@@ -315,15 +290,14 @@ def _pre_codesign_plugins(plugins_dir):
         _codesign_dylib(plugin_mach_o_path)
 
 
-def _codesign_dylib(dst):
-    if not os.path.exists(dst):
-        print("{} => not exist".format(dst))
-    print("[-]codesigning dylibs => {}".format(dst))
-    codesign_cmd = "codesign -f -s {} {}".format(CODESIGNING_IDENTITY, dst)
-    codesign_cmd_result = subprocess.getoutput(codesign_cmd)
-    print("{}".format(codesign_cmd_result))
-
-
 def _execute_shell(command_string):
     subprocess.call(command_string, shell=True)
     # os.system(command_string)
+
+
+CODESIGNING_IDENTITY = ""
+if not CODESIGNING_IDENTITY:
+    from econfig import EConfigHandler
+
+    config_handler = EConfigHandler(SETTINGS_PATH)
+    CODESIGNING_IDENTITY = config_handler.get_identity()

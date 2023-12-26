@@ -9,9 +9,8 @@ setup(
     author_email="2461414445@qq.com",
     url="https://github.com/DargonLee/EasySignIpa",
     python_requires=">=3.7",
-    include_package_data=True,
     packages=find_packages(),
-    package_data={"": ["config/*.ini", "bin/*"]},
+    package_data={"esign": ["config/*", "bin/*"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
