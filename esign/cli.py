@@ -17,7 +17,7 @@ def parse_prompt_arg(prompt_arg):
 def main():
     parser = argparse.ArgumentParser(description="ipa re-signature command tool")
     parser.add_argument("-c", "--config", help="config signing cert and provision", type=str)
-    parser.add_argument("-s", "--sign", help="re-signing the ipa", type=str)
+    parser.add_argument("-s", "--sign", help="re-signing the .ipa or .app", type=str)
     parser.add_argument(
         "-l", "--inject", help="injecting dynamic library into the app", type=str
     )

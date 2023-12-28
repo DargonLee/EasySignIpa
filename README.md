@@ -17,6 +17,7 @@
 ```python
 git clone https://github.com/DargonLee/EasySignIpa
 cd EasySignIpa
+python setup.py install_command
 pip install .
 ```
 

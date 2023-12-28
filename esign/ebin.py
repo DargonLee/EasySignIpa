@@ -1,19 +1,10 @@
 import subprocess
-from elogger import Logger
 import os
-import pathlib
-
-PATH = pathlib.Path(__file__)
-ROOT_DIR = PATH.parent
-SETTINGS_PATH = f"{ROOT_DIR}/config/settings.ini"
-IOS_DEPLOY_NEW_PATH = f"{ROOT_DIR}/bin/ios-deploy_new"
-IDEVICEINSTALLER_PATH = f"{ROOT_DIR}/bin/ideviceinstaller"
-OPTOOL_PATH = f"{ROOT_DIR}/bin/optool"
-ZSIGN_PATH = f"{ROOT_DIR}/bin/zsign"
-RESTORE_SYMBOL_PATH = f"{ROOT_DIR}/bin/restore-symbol"
-UN_SIGN_PATH = f"{ROOT_DIR}/bin/unsign"
-
 import platform
+from ezip import EZipFile
+
+from elogger import Logger
+from utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH
 
 
 def get_os():
@@ -24,9 +15,6 @@ def get_os():
         return "Mac"
     else:
         return "Unknown"
-
-
-print(get_os())
 
 
 class EBinTool(object):
@@ -47,7 +35,7 @@ class EBinTool(object):
     def codesign_app(target_app_path, entitlements_file, identity):
         print(Logger.green("👉🏻 begin codesigning app"))
         print("[-]AppPath => {}".format(target_app_path))
-        print("[-]CodesigningIdentity => {}".format(CODESIGNING_IDENTITY))
+        print("[-]CodesigningIdentity => {}".format(identity))
         codesign_cmd = "codesign -f -s {} --entitlements {} {}".format(
             identity, entitlements_file, target_app_path
         )
@@ -79,7 +67,7 @@ class EBinTool(object):
         )
         print("[-]optool_cmd => {}".format(optool_cmd))
         optool_cmd_result = subprocess.getoutput(optool_cmd)
-        print("{}".format(optool_cmd_result))
+        return optool_cmd_result
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@ import configparser
 class EConfigHandler(object):
     def __init__(self, path):
         self.section_key = "DEFAULTCONFIG"
-        self.identity_key = "identity"
-        self.mobileprovision_path_key = "mobileprovision_path"
+        self.identity_key = "codesign_identity_value"
+        self.mobileprovision_path_key = "embedded_mobileprovision_path"
 
         self.path = path
         self.config = configparser.ConfigParser()
@@ -16,7 +16,7 @@ class EConfigHandler(object):
 
     def set(self, section, option, value):
         if not self.config.has_section(section):
-            self.config.add_section(section)            
+            self.config.add_section(section)
         self.config.set(section, option, value)
 
         with open(self.path, "w") as configfile:
