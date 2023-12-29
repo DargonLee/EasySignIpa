@@ -9,7 +9,7 @@ class EConfigHandler(object):
 
         self.path = path
         self.config = configparser.ConfigParser()
-        self.config.read(self.path)
+        self.config.read(self.path, encoding="utf-8")
 
     def get(self, section, option):
         return self.config.get(section, option)

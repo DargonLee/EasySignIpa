@@ -1,10 +1,7 @@
 import sys
 import argparse
-import esign
-import econfig
-
-import site
-print(site.getsitepackages())
+from esign import ESigner
+import os
 
 
 def parse_prompt_arg(prompt_arg):
@@ -16,7 +13,9 @@ def parse_prompt_arg(prompt_arg):
 
 def main():
     parser = argparse.ArgumentParser(description="ipa re-signature command tool")
-    parser.add_argument("-c", "--config", help="config signing cert and provision", type=str)
+    parser.add_argument(
+        "-c", "--config", help="config signing cert and provision", action="store_true"
+    )
     parser.add_argument("-s", "--sign", help="re-signing the .ipa or .app", type=str)
     parser.add_argument(
         "-l", "--inject", help="injecting dynamic library into the app", type=str
@@ -40,32 +39,28 @@ def main():
 
     args = parser.parse_args()
 
-    # command.check_run_env(args)
-    # while not command.check_run_env(args):
-    #     pass
-    # exit(0)
-
     if len(sys.argv) == 1:
         parser.print_help()
 
-    # print(args);
-    # print(sys.argv[1])
-
+    install_type = None
     if args.install:
-        print("Option B selected")
+        install_type = "b"
     elif args.reinstall:
-        print("Option RB selected")
+        install_type = "rb"
 
+    output_path = None
+    if args.output:
+        output_path = os.path.abspath(args.output)
+
+    esign_obj = ESigner()
     if args.sign:
-        dylibs = []
-        if args.inject:
-            dylibs.append(args.inject)
-        esign.do_resign(
-            args.sign, args.release, args.reinstall, dylibs, args.create_ipa
-        )
+        esign_obj.check_run_env()
+
+        app_path = os.path.abspath(args.sign)
+        esign_obj.resign(app_path, args.inject, output_path, install_type)
 
     if args.config:
-        econfig.do_config(args.config)
+        esign_obj.check_run_env(args.config)
 
 
 if __name__ == "__main__":
