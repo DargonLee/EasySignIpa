@@ -1,6 +1,6 @@
 import sys
 import argparse
-from esign import ESigner
+from esign.esign import ESigner
 import os
 
 
@@ -54,7 +54,7 @@ def main():
 
     esign_obj = ESigner()
     if args.sign:
-        if esign_obj.check_run_env() == False:
+        if not esign_obj.check_run_env():
             print(f"Error: {esign_obj.identity} does not Correspondence with {esign_obj.mobileprovision}.")
             exit(1)
 

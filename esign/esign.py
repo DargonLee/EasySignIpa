@@ -1,12 +1,12 @@
 import os
 import shutil
 import subprocess
-from eprovision import EProvision
-from ezip import EZipFile
-from elogger import Logger
-from econfig import EConfigHandler
-from ebin import EBinTool
-from utils import (
+from esign.eprovision import EProvision
+from esign.ezip import EZipFile
+from esign.elogger import Logger
+from esign.econfig import EConfigHandler
+from esign.ebin import EBinTool
+from esign.utils import (
     SETTINGS_PATH,
     PROVISIONS_DIR_PATH,
     ESIGN_DIR_PATH,
@@ -43,18 +43,18 @@ class ESigner(object):
     def check_identity(self):
         self.identity = self.config.get_identity()
         if not self.identity:
-            self.set_identity(self.identity)
+            self.set_identity()
 
     def set_identity(self):
         self._execute_shell("security find-identity -v -p codesigning")
         self.identity = input("Please select the identity value for the certificate.:")
         self.config.set_identity(self.identity)
         self.identity = self.identity
-
+        print('[-]setEnv: identity => {}'.format(self.identity))
     def check_mobileprovision(self):
         self.mobileprovision_path = self.config.get_mobileprovision_path()
         if not self.mobileprovision_path:
-            self.set_mobileprovision(self.mobileprovision_path)
+            self.set_mobileprovision()
 
         self.provision = EProvision(self.mobileprovision_path)
 
@@ -64,13 +64,11 @@ class ESigner(object):
             raise Exception(f"{self.mobileprovision_path} not exist")
         shutil.copy(self.mobileprovision_path, PROVISIONS_DIR_PATH)
         self.config.set_mobileprovision_path(self.mobileprovision_path)
-        self.provision = EProvision(self.mobileprovision_path)
+        print('[-]setEnv: mobileprovision => {}'.format(self.mobileprovision))
 
     def set_run_env(self):
         self.set_identity()
-        print('[-]setEnv: identity => {}'.format(self.identity))
         self.set_mobileprovision()
-        print('[-]setEnv: mobileprovision => {}'.format(self.mobileprovision))
         return self.provision.contain_cer_identity(self.identity)
 
     def check_run_env(self):
@@ -179,12 +177,10 @@ class ESigner(object):
     def _clean_tmp_files(self):
         if os.path.exists(self.after_payload_path):
             shutil.rmtree(self.after_payload_path)
-        if os.path.exists(self.tempdir):
-            shutil.rmtree(self.tempdir)
 
     def _cms_embedded(self):
         # security cms -D -i embedded.mobileprovision > entitlements.plist
-        print(Logger.green("✅ cms embedded"))
+        Logger.green("✅ cms embedded")
         print(self.mobileprovision_path)
         if not os.path.exists(self.mobileprovision_path):
             raise Exception("mobileprovision not exist")
@@ -219,7 +215,7 @@ class ESigner(object):
     def _inject_dylib(self):
         # /usr/libexec/PlistBuddy -c "Print :CFBundleName" "${INFOPLIST}"
         # optool install -c load -p "@executable_path/RedEnvelop.dylib" -t WeChat
-        print(Logger.green("✅ inject dylib"))
+        Logger.green("✅ inject dylib")
         print("[-]dylibs => {}".format(self.dylibs))
         print("[-]Info.plist path => {}".format(self.info_plist_file_path))
         if len(self.dylibs) == 0:
@@ -288,15 +284,16 @@ class ESigner(object):
             EBinTool.codesign_dylib(plugin_mach_o_path, self.identity)
 
     def _zip_app(self):
-        print(Logger.green("✅ zip app to ipa"))
+        Logger.green("✅ zip app to ipa")
         payload_path = os.path.join(
-            self.tempdir, "Payload", os.path.basename(self.target_app_path)
+            self.tempdir, "Payload"
         )
-        print(f"zip: payload_path {payload_path}")
+        payload_app_path = os.path.join(payload_path, os.path.basename(self.target_app_path))
+        print(f"zip: payload_path {payload_app_path}")
         print(f"zip: tempdir {self.tempdir}")
-        if os.path.exists(payload_path):
-            shutil.rmtree(payload_path)
-        shutil.copytree(self.target_app_path, payload_path)
+        if os.path.exists(payload_app_path):
+            shutil.rmtree(payload_app_path)
+        shutil.copytree(self.target_app_path, payload_app_path)
         self.after_payload_path = payload_path
         os.chdir(self.tempdir)
         stem, suffix = os.path.splitext(os.path.basename(self.app_name))
@@ -330,7 +327,7 @@ class ESigner(object):
                 self.info_plist_file_path
             )
         )
-        print(Logger.green("✅ app info"))
+        Logger.green("✅ app info")
         print("[-]BundleName => {}".format(bundle_name))
         print("[-]BundleID => {}".format(bundle_id))
         print("[-]ShortVersion => {}".format(short_version))

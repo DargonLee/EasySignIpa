@@ -1,10 +1,8 @@
 import subprocess
 import os
 import platform
-from ezip import EZipFile
-
-from elogger import Logger
-from utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH
+from esign.elogger import Logger
+from esign.utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH
 
 
 def get_os():

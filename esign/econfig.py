@@ -12,6 +12,10 @@ class EConfigHandler(object):
         self.config.read(self.path, encoding="utf-8")
 
     def get(self, section, option):
+        if section not in self.config.sections():
+            return None
+        if option not in self.config.options(section):
+            return None
         return self.config.get(section, option)
 
     def set(self, section, option, value):
@@ -40,6 +44,9 @@ if __name__ == "__main__":
     config_handler = EConfigHandler(
         "/Users/apple/Desktop/Github/EasySignIpa/config/settings.ini"
     )
-    config_handler.set("DEFAULTss", "debug", "False")
+    print(config_handler.config.sections())
+    print(config_handler.get_mobileprovision_path())
+    config_handler.get("DEFAULT_SECTION", "debug")  # 读取 DEFAULT section 下的 debug option
+    # config_handler.set("DEFAULTss", "debug", "False")
     # 设置 DEFAULT section 下的 debug option 为 'False'
     # print(config_handler.get("DEFAULT_SECTION", "debug"))  # 读取 DEFAULT section 下的 debug option

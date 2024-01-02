@@ -27,7 +27,6 @@ class Logger:
     @staticmethod
     def green(msg):
         print(Logger.GREEN + msg + Logger.END)
-        print(Logger.GREEN + msg + Logger.END)
 
     @staticmethod
     def yellow(msg):
