@@ -54,13 +54,19 @@ def main():
 
     esign_obj = ESigner()
     if args.sign:
-        esign_obj.check_run_env()
+        if esign_obj.check_run_env() == False:
+            print(f"Error: {esign_obj.identity} does not Correspondence with {esign_obj.mobileprovision}.")
+            exit(1)
 
         app_path = os.path.abspath(args.sign)
         esign_obj.resign(app_path, args.inject, output_path, install_type)
 
     if args.config:
-        esign_obj.check_run_env(args.config)
+        if esign_obj.set_run_env() == False:
+            print(f"Error: {esign_obj.identity} does not Correspondence with {esign_obj.mobileprovision}.")
+            exit(1)
+        else:
+            print("Success: config signing cert and provision.")
 
 
 if __name__ == "__main__":

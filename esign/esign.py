@@ -1,7 +1,7 @@
 import os
 import shutil
 import subprocess
-import zipfile
+from eprovision import EProvision
 from ezip import EZipFile
 from elogger import Logger
 from econfig import EConfigHandler
@@ -17,39 +17,70 @@ from utils import (
 
 class ESigner(object):
     def __init__(self):
-        self.payload_path = ""
-        self.after_payload_path = ""
-        self.app_name = ""
-        self.identity = ""
-        self.mobileprovision_path = ""
+        self.install_type = None
+        self.inject_dylibs = None
+        self.target_app_path = None
+        self.payload_path = None
+        self.after_payload_path = None
+        self.app_name = None
+        self.identity = None
+        self.mobileprovision_path = None
+        self.tempdir = None
+        self.current_path = None
+        self.provision = None
+
         self.config = EConfigHandler(SETTINGS_PATH)
+        self.identity = self.config.get_identity() or None
+        self.mobileprovision_path = self.config.get_mobileprovision_path() or None
+        if self.mobileprovision_path:
+            self.provision = EProvision(self.mobileprovision_path)
+
+    @property
+    def mobileprovision(self):
+        file_name_with_extension = os.path.basename(self.mobileprovision_path)
+        return file_name_with_extension
 
     def check_identity(self):
         self.identity = self.config.get_identity()
         if not self.identity:
-            self._execute_shell("security find-identity -v -p codesigning")
-            self.identity = input("请输入证书identity值:")
-            self.config.set_identity(self.identity)
-            self.identity = self.identity
+            self.set_identity(self.identity)
+
+    def set_identity(self):
+        self._execute_shell("security find-identity -v -p codesigning")
+        self.identity = input("Please select the identity value for the certificate.:")
+        self.config.set_identity(self.identity)
+        self.identity = self.identity
 
     def check_mobileprovision(self):
         self.mobileprovision_path = self.config.get_mobileprovision_path()
         if not self.mobileprovision_path:
-            self.mobileprovision_path = input("请输入描述文件路径:")
-            if not os.path.exists(self.mobileprovision_path):
-                raise Exception(f"{self.mobileprovision_path} not exist")
-            shutil.copy(self.mobileprovision_path, PROVISIONS_DIR_PATH)
-            self.config.set_mobileprovision_path(self.mobileprovision_path)
+            self.set_mobileprovision(self.mobileprovision_path)
+
+        self.provision = EProvision(self.mobileprovision_path)
+
+    def set_mobileprovision(self):
+        self.mobileprovision_path = input("Please provide the full path to the provisioning profile file.:")
+        if not os.path.exists(self.mobileprovision_path):
+            raise Exception(f"{self.mobileprovision_path} not exist")
+        shutil.copy(self.mobileprovision_path, PROVISIONS_DIR_PATH)
+        self.config.set_mobileprovision_path(self.mobileprovision_path)
+        self.provision = EProvision(self.mobileprovision_path)
+
+    def set_run_env(self):
+        self.set_identity()
+        print('[-]setEnv: identity => {}'.format(self.identity))
+        self.set_mobileprovision()
+        print('[-]setEnv: mobileprovision => {}'.format(self.mobileprovision))
+        return self.provision.contain_cer_identity(self.identity)
 
     def check_run_env(self):
         self.check_identity()
         self.check_mobileprovision()
+        return self.provision.contain_cer_identity(self.identity)
 
     def _prepare_app_path(self):
-        print(Logger.green("✅ resign prepare"))
-
         self.current_path = os.getcwd()
-        print(f"current_path => {self.current_path}")
+        print(f"[-]prepare: current_path => {self.current_path}")
 
         app_path, extension = os.path.splitext(self.target_app_path)
         app_extension = extension[1:]
@@ -57,15 +88,14 @@ class ESigner(object):
         self.app_name = app_name
 
         if not os.path.exists(self.target_app_path):
-            print(f"Error: {self.target_app_path} does not exist.")
+            print(f"[-]Error: {self.target_app_path} does not exist.")
             exit(1)
         if app_extension != "ipa" and app_extension != "app":
-            print(f"Error: {self.target_app_path} does not support.")
+            print(f"[-]Error: {self.target_app_path} does not support.")
             exit(1)
 
         if app_extension == "ipa":
             import tempfile
-
             self.tempdir = tempfile.mkdtemp()
             EZipFile.unzip_file(self.target_app_path, self.tempdir)
             payload_path = os.path.join(self.tempdir, "Payload")
@@ -75,7 +105,7 @@ class ESigner(object):
         else:
             self.tempdir = os.path.dirname(self.target_app_path)
 
-        print("[-]AppPath: {}".format(self.target_app_path))
+        print("[-]prepare: AppPath => {}".format(self.target_app_path))
         if not os.path.exists(self.target_app_path):
             raise Exception("{} not exist".format(self.app_name))
 
@@ -90,6 +120,10 @@ class ESigner(object):
         print(self.tempdir)
         print(Logger.green("✅ prepare app path done"))
 
+    def _check_resign_env(self):
+        if not os.path.exists(self.info_plist_file_path):
+            raise Exception("{} 不存在Info.plist文件".format(self.app_name))
+
     def resign(
         self,
         app_path,
@@ -97,7 +131,6 @@ class ESigner(object):
         output_dir=None,
         install_type=None,
     ):
-        """重签名当前执行路径下的.app文件"""
         self.target_app_path = app_path
         self.inject_dylibs = dylibs
         self.output_dir = output_dir
@@ -106,12 +139,10 @@ class ESigner(object):
         self._prepare_app_path()
 
         print(Logger.green("✅ resign info"))
-        print("[-]AppName: {}".format(self.app_name))
-        print("[-]CurrentPath: {}".format(self.current_path))
+        print("[-]resign: AppName: {}".format(self.app_name))
 
-        info_plist_file_path = os.path.join(self.target_app_path, "Info.plist")
-        if not os.path.exists(info_plist_file_path):
-            raise Exception("{} 不存在Info.plist文件".format(self.app_name))
+        # 检测重签环境
+        self._check_resign_env()
 
         # 提取描述文件的entitlements
         self._cms_embedded()
@@ -129,17 +160,27 @@ class ESigner(object):
             # self._pre_codesign_plugins()
 
         # 签名 - app
-        EBinTool.codesign_dylib(self.target_app_path, self.identity)
+        EBinTool.codesign_app(self.target_app_path, self.entitlements_file,self.identity)
 
         # 压缩成ipa
-        self._zip_app()
+        if self.output_dir:
+            self._zip_app()
 
         # 打印App包信息
         self._print_app_info()
 
+        # 安装 - app
         if self.install_type is not None:
-            # 安装 - app
             EBinTool.install_app(self.target_app_path)
+
+        # clean tmp
+        self._clean_tmp_files()
+
+    def _clean_tmp_files(self):
+        if os.path.exists(self.after_payload_path):
+            shutil.rmtree(self.after_payload_path)
+        if os.path.exists(self.tempdir):
+            shutil.rmtree(self.tempdir)
 
     def _cms_embedded(self):
         # security cms -D -i embedded.mobileprovision > entitlements.plist
@@ -251,8 +292,8 @@ class ESigner(object):
         payload_path = os.path.join(
             self.tempdir, "Payload", os.path.basename(self.target_app_path)
         )
-        print(f"payload_path {payload_path}")
-        print(f"tempdir {self.tempdir}")
+        print(f"zip: payload_path {payload_path}")
+        print(f"zip: tempdir {self.tempdir}")
         if os.path.exists(payload_path):
             shutil.rmtree(payload_path)
         shutil.copytree(self.target_app_path, payload_path)
@@ -261,12 +302,11 @@ class ESigner(object):
         stem, suffix = os.path.splitext(os.path.basename(self.app_name))
         ipa_name = f"{stem}.ipa"
         zip_cmd = "zip -qr {} {}".format(ipa_name, "Payload/")
-        if self.output_dir:
-            shutil.move(
-                os.path.join(self.tempdir, ipa_name),
-                os.path.join(self.output_dir, ipa_name),
-            )
         os.system(zip_cmd)
+        shutil.move(
+            os.path.join(self.tempdir, ipa_name),
+            os.path.join(self.output_dir, ipa_name),
+        )
         os.chdir(self.current_path)
 
     def _print_app_info(self):
@@ -298,7 +338,6 @@ class ESigner(object):
 
     def _execute_shell(self, command_string):
         subprocess.call(command_string, shell=True)
-
 
 if __name__ == "__main__":
     target_app_path = "/Users/apple/Downloads/Payload/sacurity.app"

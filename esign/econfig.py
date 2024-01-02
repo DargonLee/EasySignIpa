@@ -35,10 +35,6 @@ class EConfigHandler(object):
         self.set(self.section_key, self.mobileprovision_path_key, path)
 
 
-def do_config():
-    pass
-
-
 if __name__ == "__main__":
     # 使用示例
     config_handler = EConfigHandler(

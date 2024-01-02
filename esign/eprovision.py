@@ -98,13 +98,15 @@ class EProvision(object):
         self._device_sets = None
         self._dev_cer_list = None
 
+        self.cer_sha1 = None
+
     def __getitem__(self, item):
         return self.dict_info.get(item.lower(), None)
 
     def __repr__(self):
         import pprint
 
-        tmp_dict = dict(self._origin_info)
+        tmp_dict = dict(self.origin_info)
         tmp_dict["DeveloperCertificates"] = self.developer_certificates
 
         return pprint.pformat(tmp_dict)
@@ -281,10 +283,17 @@ class EProvision(object):
         """
         Path(dst_plist_path).open("w").write(self.xml_content)
 
+    def contain_cer_identity(self, identity):
+        for dev_cer in self.developer_certificates:
+            if dev_cer.sha1 == identity:
+                return True
+        return False
+
 
 if __name__ == "__main__":
     # 使用示例
-    provision = EProvision("/Users/apple/Downloads/enterprise2026.mobileprovision")
-    print(provision.app_id_name)
+    provision = EProvision("/Users/apple/Downloads/enterprise_2023_8_23.mobileprovision")
+    # print(provision.app_id_name)
     # print(provision.entitlements)
-    print(provision.developer_certificates)
+    # print(provision.contain_cer_identity("A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U"))
+    print(provision.contain_cer_identity("A3ABDAD2AC280704A095E4B62FF7ABFFFC7C10E6"))
