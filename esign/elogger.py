@@ -11,26 +11,29 @@ class Logger:
     def __init__(self):
         print("init tool")
 
+    @staticmethod
     def cyan(msg):
-        print(Logger.CYAN + msg + Logger.END)
+        return Logger.CYAN + msg + Logger.END
 
+    @staticmethod
     def blue(msg):
-        print(Logger.BLUE + msg + Logger.END)
+        return Logger.BLUE + msg + Logger.END
 
+    @staticmethod
     def white(msg):
-        print(Logger.WHITE + msg + Logger.END)
+        return Logger.WHITE + msg + Logger.END
 
     @staticmethod
     def red(msg):
-        print(Logger.RED + msg + Logger.END)
+        return Logger.RED + msg + Logger.END
 
     @staticmethod
     def green(msg):
-        print(Logger.GREEN + msg + Logger.END)
+        return Logger.GREEN + msg + Logger.END
 
     @staticmethod
     def yellow(msg):
-        print(Logger.YELLOW + msg + Logger.END)
+        return Logger.YELLOW + msg + Logger.END
 
     @staticmethod
     def info(msg):

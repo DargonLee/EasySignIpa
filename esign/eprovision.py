@@ -292,8 +292,8 @@ class EProvision(object):
 
 if __name__ == "__main__":
     # 使用示例
-    provision = EProvision("/Users/apple/Downloads/enterprise_2023_8_23.mobileprovision")
+    provision = EProvision("/Users/apple/Downloads/unsafe_resign_development.mobileprovision")
     # print(provision.app_id_name)
     # print(provision.entitlements)
     # print(provision.contain_cer_identity("A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U"))
-    print(provision.contain_cer_identity("A3ABDAD2AC280704A095E4B62FF7ABFFFC7C10E6"))
+    print(provision.contain_cer_identity("AA3B0973C580E5020D876010A04B476333C2D98D"))
