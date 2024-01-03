@@ -34,7 +34,7 @@ pip install -U esign
 ```python
 esign -c
 ```
-输入证书和描述文件的路径
+输入证书identity值和描述文件的路径
 
 `注意⚠️：证书和描述文件是要匹配的`
 

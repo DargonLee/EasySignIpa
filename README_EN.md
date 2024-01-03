@@ -27,7 +27,7 @@ pip install -U esign
 
 ### Examples
 
-- Configure the re-signing certificate and provisioning profile.
+- Configure the re-signing certificate identity value and provisioning profile.
 
 ```python
 esign -c
