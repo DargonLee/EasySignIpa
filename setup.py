@@ -1,6 +1,6 @@
+from distutils.cmd import Command
 from os import getcwd
 from setuptools import setup, find_packages
-from distutils.cmd import Command
 
 
 class InstallCommand(Command):

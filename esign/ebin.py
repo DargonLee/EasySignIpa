@@ -26,7 +26,7 @@ class EBinTool(object):
         install_cmd = "{} {} {}".format(
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )
-        print("[-]".format(install_cmd))
+        print(f"[-] {install_cmd}")
         os.system(install_cmd)
 
     @staticmethod
@@ -50,17 +50,11 @@ class EBinTool(object):
         print("{}".format(codesign_cmd_result))
 
     @staticmethod
-    def optool_inject(dylib_framework_path, execu_table_path):
-        dylib_name, extension = os.path.splitext(dylib_framework_path)
-        dylib_extension = extension[1:]
-        print("[-]inject dylib_name => {}".format(dylib_name))
-
-        if dylib_extension == "dylib":
-            framework_name = dylib_name
-
+    def optool_inject(framework_name, execu_table_path):
+        print(Logger.green("👉🏻 begin optool inject"))
         optool_cmd = (
             '{} install -c load -p "@executable_path/Frameworks/{}" -t {}'.format(
-                OPTOOL_PATH, dylib_name, framework_name, execu_table_path
+                OPTOOL_PATH, framework_name, execu_table_path
             )
         )
         print("[-]optool_cmd => {}".format(optool_cmd))
@@ -69,7 +63,11 @@ class EBinTool(object):
 
 
 if __name__ == "__main__":
+    # EBinTool.optool_inject(
+    #     "/Users/apple/Downloads/Payload/Vss.framework",
+    #     " /Users/apple/Downloads/Payload/sacurity.app/sacurity",
+    # )
     EBinTool.optool_inject(
-        "/Users/apple/Desktop/Github/EasySignIpa/bin/lib/WeChatRedEnvelop.dylib",
-        "/Users/apple/Desktop/Github/EasySignIpa/bin/WeChat.app/WeChat",
+        "/Users/apple/Downloads/Payload/libMacBox.dylib",
+        " /Users/apple/Downloads/Payload/sacurity.app/sacurity",
     )

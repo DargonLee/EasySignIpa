@@ -18,7 +18,7 @@ from esign.utils import (
 class ESigner(object):
     def __init__(self):
         self.install_type = None
-        self.inject_dylibs = None
+        self.inject_dylib_list = None
         self.target_app_path = None
         self.payload_path = None
         self.after_payload_path = None
@@ -47,7 +47,7 @@ class ESigner(object):
 
     def set_identity(self):
         self._execute_shell("security find-identity -v -p codesigning")
-        self.identity = input("Please select the identity value for the certificate.:")
+        self.identity = input("Please select the identity value for the certificate :")
         self.config.set_identity(self.identity)
         self.identity = self.identity
         print('[-]setEnv: identity => {}'.format(self.identity))
@@ -59,7 +59,7 @@ class ESigner(object):
         self.provision = EProvision(self.mobileprovision_path)
 
     def set_mobileprovision(self):
-        self.mobileprovision_path = input("Please provide the full path to the provisioning profile file.:")
+        self.mobileprovision_path = input("Please provide the full path to the provisioning profile file :")
         if not os.path.exists(self.mobileprovision_path):
             raise Exception(f"{self.mobileprovision_path} not exist")
         shutil.copy(self.mobileprovision_path, PROVISIONS_DIR_PATH)
@@ -125,12 +125,12 @@ class ESigner(object):
     def resign(
         self,
         app_path,
-        dylibs=[],
+        dylib_list=[],
         output_dir=None,
         install_type=None,
     ):
         self.target_app_path = app_path
-        self.inject_dylibs = dylibs
+        self.inject_dylib_list = dylib_list
         self.output_dir = output_dir
         self.install_type = install_type
 
@@ -146,7 +146,8 @@ class ESigner(object):
         self._cms_embedded()
 
         # 注入 - dylib
-        # self._inject_dylib()
+        if len(self.inject_dylib_list) > 0:
+            self._inject_dylib()
 
         # 签名 - frameworks
         if os.path.exists(self.frameworks_dir):
@@ -161,7 +162,7 @@ class ESigner(object):
         EBinTool.codesign_app(self.target_app_path, self.entitlements_file,self.identity)
 
         # 压缩成ipa
-        if self.output_dir:
+        if self.output_dir is not None:
             self._zip_app()
 
         # 打印App包信息
@@ -175,7 +176,7 @@ class ESigner(object):
         self._clean_tmp_files()
 
     def _clean_tmp_files(self):
-        if os.path.exists(self.after_payload_path):
+        if self.after_payload_path is not None and os.path.exists(self.after_payload_path):
             shutil.rmtree(self.after_payload_path)
 
     def _cms_embedded(self):
@@ -216,18 +217,27 @@ class ESigner(object):
         # /usr/libexec/PlistBuddy -c "Print :CFBundleName" "${INFOPLIST}"
         # optool install -c load -p "@executable_path/RedEnvelop.dylib" -t WeChat
         Logger.green("✅ inject dylib")
-        print("[-]dylibs => {}".format(self.dylibs))
+        print("[-]dylibs => {}".format(self.inject_dylib_list))
         print("[-]Info.plist path => {}".format(self.info_plist_file_path))
-        if len(self.dylibs) == 0:
+        if len(self.inject_dylib_list) == 0:
             print(Logger.yellow("⚠️  Warn: no dylibs need to inject"))
             return
 
         def _inject_action(dylib_path):
             if not os.path.exists(dylib_path):
-                print("inject fail: {}.framework not exit".format(dylib))
-                return
+                raise Exception("[-]inject fail: {}.framework not exit".format(dylib_path))
 
-            dylib_name, extension = os.path.splitext(dylib_path)
+            dylib_framework_name = os.path.basename(dylib_path)
+            dylib_name, extension = os.path.splitext(dylib_framework_name)
+            dylib_extension = extension[1:]
+
+            if dylib_extension == "framework":
+                framework_name = os.path.join(dylib_framework_name, dylib_name)
+            elif dylib_extension == "dylib":
+                framework_name = dylib_framework_name
+            else:
+                raise Exception("[-]dylib_extension not support => {}".format(dylib_extension))
+
             print("[-]inject dylib => {}".format(dylib_name))
             bundle_name = subprocess.getoutput(
                 '/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable"  {}'.format(
@@ -238,7 +248,8 @@ class ESigner(object):
             app_frameworks_path = os.path.join(self.target_app_path, "Frameworks")
             if not os.path.exists(app_frameworks_path):
                 os.makedirs(app_frameworks_path)
-            dylib_framework_path = os.path.join(app_frameworks_path, dylib)
+            dylib_framework_path = os.path.join(app_frameworks_path, dylib_framework_name)
+
             print("[-]execu_table_path => {}".format(execu_table_path))
             print("[-]app_frameworks_path => {}".format(app_frameworks_path))
             print("[-]dylib_framework_path => {}".format(dylib_framework_path))
@@ -246,15 +257,15 @@ class ESigner(object):
             if os.path.exists(dylib_framework_path):
                 print("[-]update dylib => {}".format(dylib_name))
                 self._execute_shell(f"rm -rf {dylib_framework_path}")
-            self._execute_shell(f"cp -rf {dylib_framework_path} {app_frameworks_path}")
+            self._execute_shell(f"cp -rf {dylib_path} {app_frameworks_path}")
 
-            optool_cmd_result = EBinTool.optool_inject(dylib_path, execu_table_path)
+            optool_cmd_result = EBinTool.optool_inject(framework_name, execu_table_path)
             print("{}".format(optool_cmd_result))
             if "Successfully" not in optool_cmd_result:
-                raise Exception("optool inject dylibs fail")
+                raise Exception("optool inject dylib_list fail")
             self._execute_shell("chmod +x {}".format(execu_table_path))
 
-        for dylib in self.dylibs:
+        for dylib in self.inject_dylib_list:
             _inject_action(dylib)
 
     def _pre_codesign_dylib(self):
@@ -297,7 +308,7 @@ class ESigner(object):
         self.after_payload_path = payload_path
         os.chdir(self.tempdir)
         stem, suffix = os.path.splitext(os.path.basename(self.app_name))
-        ipa_name = f"{stem}.ipa"
+        ipa_name = f"{stem}_resign.ipa"
         zip_cmd = "zip -qr {} {}".format(ipa_name, "Payload/")
         os.system(zip_cmd)
         shutil.move(

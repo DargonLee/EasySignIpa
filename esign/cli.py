@@ -52,6 +52,11 @@ def main():
     if args.output:
         output_path = os.path.abspath(args.output)
 
+    inject_dylib_list = []
+    if args.inject:
+        inject_dylib_path = os.path.abspath(args.inject)
+        inject_dylib_list.append(inject_dylib_path)
+
     esign_obj = ESigner()
     if args.sign:
         if not esign_obj.check_run_env():
@@ -59,10 +64,10 @@ def main():
             exit(1)
 
         app_path = os.path.abspath(args.sign)
-        esign_obj.resign(app_path, args.inject, output_path, install_type)
+        esign_obj.resign(app_path, inject_dylib_list, output_path, install_type)
 
     if args.config:
-        if esign_obj.set_run_env() == False:
+        if not esign_obj.set_run_env():
             print(f"Error: {esign_obj.identity} does not Correspondence with {esign_obj.mobileprovision}.")
             exit(1)
         else:
