@@ -19,7 +19,7 @@ python setup.py install_command
 pip install .
 ```
 
-- pip installation
+- pip installation （coming soon）
 
 ```python
 pip install -U esign

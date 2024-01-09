@@ -1,18 +1,21 @@
 # **[中文] | [English](./README_EN.md)**
 
 ### EasySignIpa
+
+![image-20240109170523351](README.assets/image-20240109170523351.png)
+
 > 重签名 iOS 的 IPA 文件的命令行工具
 `IPA文件需要是咂壳后的包`
 
 ### 准备
 
-- macOS
+- macOS `Linux coming soon`
 - Xcode
 - Python 3.8+
 
 ### 安装
 
-- 本地安装
+- 本地安装 `推荐`
 
 ```python
 git clone https://github.com/DargonLee/EasySignIpa
@@ -21,7 +24,7 @@ python setup.py install_command
 pip install .
 ```
 
-- pip 安装
+- pip 安装 `coming soon`
 
 ```python
 pip install -U esign
