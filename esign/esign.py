@@ -116,6 +116,8 @@ class ESigner(object):
         self.plugins_dir = os.path.join(self.target_app_path, "PlugIns")
         self.sc_info_dir = os.path.join(self.target_app_path, "SC_Info")
         self.watch_dir = os.path.join(self.target_app_path, "Watch")
+        self.ds_store = os.path.join(self.payload_path, ".DS_Store")
+        self.macosx = os.path.join(self.payload_path, "__MACOSX")
 
         print(f"[-]prepare info_plist_file_path => : {self.info_plist_file_path}")
         print(f"[-]prepare frameworks_dir => : {self.frameworks_dir}")
@@ -147,17 +149,6 @@ class ESigner(object):
         # 检测重签环境
         self._check_resign_env()
 
-        # 提取描述文件的entitlements
-        self._cms_embedded()
-
-        # 注入 - dylib
-        if len(self.inject_dylib_list) > 0:
-            self._inject_dylib()
-
-        # 签名 - frameworks
-        if os.path.exists(self.frameworks_dir):
-            self._pre_codesign_dylib()
-
         # 删除 - plugins
         if os.path.exists(self.plugins_dir):
             shutil.rmtree(self.plugins_dir)
@@ -170,6 +161,25 @@ class ESigner(object):
         # 删除 - Watch
         if os.path.exists(self.watch_dir):
             shutil.rmtree(self.watch_dir)
+
+        # 删除 - .DS_Store
+        if os.path.exists(self.ds_store):
+            shutil.rmtree(self.ds_store)
+
+        # 删除 - __MACOSX
+        if os.path.exists(self.macosx):
+            shutil.rmtree(self.macosx)
+
+        # 提取描述文件的entitlements
+        self._cms_embedded()
+
+        # 注入 - dylib
+        if len(self.inject_dylib_list) > 0:
+            self._inject_dylib()
+
+        # 签名 - frameworks
+        if os.path.exists(self.frameworks_dir):
+            self._pre_codesign_dylib()
 
         # 签名 - app
         EBinTool.codesign_app(self.target_app_path, self.entitlements_file, self.identity)
