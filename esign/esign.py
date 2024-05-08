@@ -114,6 +114,8 @@ class ESigner(object):
         self.info_plist_file_path = os.path.join(self.target_app_path, "Info.plist")
         self.frameworks_dir = os.path.join(self.target_app_path, "Frameworks")
         self.plugins_dir = os.path.join(self.target_app_path, "PlugIns")
+        self.sc_info_dir = os.path.join(self.target_app_path, "SC_Info")
+        self.watch_dir = os.path.join(self.target_app_path, "Watch")
 
         print(f"[-]prepare info_plist_file_path => : {self.info_plist_file_path}")
         print(f"[-]prepare frameworks_dir => : {self.frameworks_dir}")
@@ -156,10 +158,18 @@ class ESigner(object):
         if os.path.exists(self.frameworks_dir):
             self._pre_codesign_dylib()
 
-        # 签名 - plugins
+        # 删除 - plugins
         if os.path.exists(self.plugins_dir):
             shutil.rmtree(self.plugins_dir)
             # self._pre_codesign_plugins()
+
+        # 删除 - SC_Info
+        if os.path.exists(self.sc_info_dir):
+            shutil.rmtree(self.sc_info_dir)
+
+        # 删除 - Watch
+        if os.path.exists(self.watch_dir):
+            shutil.rmtree(self.watch_dir)
 
         # 签名 - app
         EBinTool.codesign_app(self.target_app_path, self.entitlements_file, self.identity)

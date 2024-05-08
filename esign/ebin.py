@@ -23,7 +23,7 @@ class EBinTool(object):
         install_type = "-b"
         if IS_REINSTALL:
             install_type = "-rb"
-        install_cmd = "{} {} {}".format(
+        install_cmd = "{} {} {} -W".format(
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )
         print(f"[-] {install_cmd}")
