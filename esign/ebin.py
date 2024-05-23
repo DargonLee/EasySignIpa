@@ -61,6 +61,18 @@ class EBinTool(object):
         optool_cmd_result = subprocess.getoutput(optool_cmd)
         return optool_cmd_result
 
+    @staticmethod
+    def optool_delete_unrestrict(execu_table_path):
+        print(Logger.green("👉🏻 begin delete unrestrict"))
+        optool_cmd = (
+            '{} unrestrict -t {}'.format(
+                OPTOOL_PATH, execu_table_path
+            )
+        )
+        print("[-]optool_cmd => {}".format(optool_cmd))
+        optool_cmd_result = subprocess.getoutput(optool_cmd)
+        return optool_cmd_result
+
 
 if __name__ == "__main__":
     # EBinTool.optool_inject(

@@ -28,6 +28,8 @@ class ESigner(object):
         self.tempdir = None
         self.current_path = None
         self.provision = None
+        self.execute_path = None
+        self.executable_name = None
 
         self.config = EConfigHandler(SETTINGS_PATH)
         self.identity = self.config.get_identity() or None
@@ -106,6 +108,8 @@ class ESigner(object):
             self.target_app_path = os.path.join(payload_path, self.app_name)
         else:
             self.tempdir = os.path.dirname(self.target_app_path)
+            payload_path = os.path.join(self.tempdir, "Payload")
+            self.payload_path = payload_path
 
         print(f"[-]prepare: AppPath => {self.target_app_path}")
         if not os.path.exists(self.target_app_path):
@@ -118,6 +122,13 @@ class ESigner(object):
         self.watch_dir = os.path.join(self.target_app_path, "Watch")
         self.ds_store = os.path.join(self.payload_path, ".DS_Store")
         self.macosx = os.path.join(self.payload_path, "__MACOSX")
+
+        self.executable_name = subprocess.getoutput(
+            '/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable"  {}'.format(
+                self.info_plist_file_path
+            )
+        )
+        self.execute_path = os.path.join(self.target_app_path, self.executable_name)
 
         print(f"[-]prepare info_plist_file_path => : {self.info_plist_file_path}")
         print(f"[-]prepare frameworks_dir => : {self.frameworks_dir}")
@@ -170,6 +181,9 @@ class ESigner(object):
         if os.path.exists(self.macosx):
             shutil.rmtree(self.macosx)
 
+        # 删除 - unrestrict
+        self._prepare_mach_o()
+
         # 提取描述文件的entitlements
         self._cms_embedded()
 
@@ -197,6 +211,10 @@ class ESigner(object):
 
         # clean tmp
         self._clean_tmp_files()
+
+    def _prepare_mach_o(self):
+        print(f"xxx {self.target_app_path}");
+        EBinTool.optool_delete_unrestrict(self.execute_path)
 
     def _clean_tmp_files(self):
         if self.after_payload_path is not None and os.path.exists(self.after_payload_path):
