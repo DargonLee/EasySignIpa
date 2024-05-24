@@ -9,6 +9,7 @@ IOS_DEPLOY_NEW_PATH = os.path.join(ESIGN_DIR_PATH, "bin/ios-deploy_new")
 IDEVICEINSTALLER_PATH = os.path.join(ESIGN_DIR_PATH, "bin/ideviceinstaller")
 OPTOOL_PATH = os.path.join(ESIGN_DIR_PATH, "bin/optool")
 ZSIGN_PATH = os.path.join(ESIGN_DIR_PATH, "bin/zsign")
+JTOOL2_PATH = os.path.join(ESIGN_DIR_PATH, "bin/jtool2")
 RESTORE_SYMBOL_PATH = os.path.join(ESIGN_DIR_PATH, "bin/restore-symbol")
 UN_SIGN_PATH = os.path.join(ESIGN_DIR_PATH, "bin/unsign")
 EMBEDDED_ENTITLEMENTS = "entitlements.plist"

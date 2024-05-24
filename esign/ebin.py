@@ -2,7 +2,7 @@ import subprocess
 import os
 import platform
 from esign.elogger import Logger
-from esign.utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH
+from esign.utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH, JTOOL2_PATH
 
 
 def get_os():
@@ -80,6 +80,18 @@ class EBinTool(object):
         print("[-]optool_cmd => {}".format(optool_cmd))
         optool_cmd_result = subprocess.getoutput(optool_cmd)
         return optool_cmd_result
+
+    @staticmethod
+    def jtool2(param):
+        print(Logger.green("✅ jtool2 {}".format(param)))
+        jtool2_cmd = (
+            '{} {}'.format(
+                JTOOL2_PATH, param
+            )
+        )
+        print("[-]jtool2_cmd => {}".format(jtool2_cmd))
+        jtool2_cmd_result = subprocess.getoutput(jtool2_cmd)
+        return jtool2_cmd_result
 
 
 if __name__ == "__main__":
