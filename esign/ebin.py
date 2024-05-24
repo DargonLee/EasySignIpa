@@ -19,7 +19,7 @@ class EBinTool(object):
     @staticmethod
     def install_app(target_app_path, IS_REINSTALL=False):
         print(Logger.green("✅ install app"))
-        print("[-]AppPath => {}".format(target_app_path))
+        print("[-]Install AppPath => {}".format(target_app_path))
         install_type = "-b"
         if IS_REINSTALL:
             install_type = "-rb"
@@ -27,7 +27,8 @@ class EBinTool(object):
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )
         print(f"[-] {install_cmd}")
-        os.system(install_cmd)
+        install_cmd_result = subprocess.getoutput(install_cmd)
+        print("{}".format(install_cmd_result))
 
     @staticmethod
     def codesign_app(target_app_path, entitlements_file, identity):

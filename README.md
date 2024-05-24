@@ -99,3 +99,7 @@ esign -s /Users/xxx/Desktop/xxx.ipa -l /Users/xxx/Desktop/xxx.dylib -b
 # 重新安装
 esign -s /Users/xxx/Desktop/xxx.ipa -l /Users/xxx/Desktop/xxx.framework -rb
 ```
+
+### Pycharm Debug
+
+![image-20240524131506385](README.assets/image-20240524131506385.png)
