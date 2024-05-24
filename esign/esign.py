@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -149,6 +150,7 @@ class ESigner(object):
             dylib_list=[],
             output_dir=None,
             install_type=None,
+            is_print_info=False
     ):
         self.target_app_path = app_path
         self.inject_dylib_list = dylib_list
@@ -195,6 +197,10 @@ class ESigner(object):
 
         # 安装 - app
         EBinTool.install_app(self.target_app_path, install_type)
+
+        # 打印Info.plist文件所有内容
+        if is_print_info:
+            self._print_app_infoplist_content()
 
         # clean tmp
         self._clean_tmp_files()
@@ -410,6 +416,13 @@ class ESigner(object):
         )
         os.chdir(self.current_path)
 
+    def _print_app_infoplist_content(self):
+        print(Logger.green("✅ app info plist content"))
+        with open(self.info_plist_file_path, 'rb') as f:
+            plist_content = plistlib.load(f)
+            json_content = json.dumps(plist_content, indent=4, ensure_ascii=False)
+            print(json_content)
+
     def _print_app_info(self):
         bundle_name = subprocess.getoutput(
             '/usr/libexec/PlistBuddy -c "Print :CFBundleName"  {}'.format(
@@ -431,7 +444,7 @@ class ESigner(object):
                 self.info_plist_file_path
             )
         )
-        print(Logger.green("✅ app info"))
+        print(Logger.green("✅ app base info"))
         print(f"[-]BundleName => {bundle_name}")
         print(f"[-]BundleID => {bundle_id}")
         print(f"[-]ShortVersion => {short_version}")

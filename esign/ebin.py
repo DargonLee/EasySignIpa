@@ -38,7 +38,6 @@ class EBinTool(object):
         )
         codesign_cmd_result = subprocess.getoutput(codesign_cmd)
         print("{}".format(codesign_cmd_result))
-        print(Logger.green("🔚 codesigning app done"))
 
     @staticmethod
     def dump_app_entitlements(target_app_path, entitlements_file):
