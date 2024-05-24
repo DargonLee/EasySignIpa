@@ -160,26 +160,11 @@ class ESigner(object):
         # 检测重签环境
         self._check_resign_env()
 
-        # 删除 - plugins
-        if os.path.exists(self.plugins_dir):
-            shutil.rmtree(self.plugins_dir)
-            # self._pre_codesign_plugins()
+        #资源处理
+        self._prepare_recourse()
 
-        # 删除 - SC_Info
-        if os.path.exists(self.sc_info_dir):
-            shutil.rmtree(self.sc_info_dir)
-
-        # 删除 - Watch
-        if os.path.exists(self.watch_dir):
-            shutil.rmtree(self.watch_dir)
-
-        # 删除 - .DS_Store
-        if os.path.exists(self.ds_store):
-            shutil.rmtree(self.ds_store)
-
-        # 删除 - __MACOSX
-        if os.path.exists(self.macosx):
-            shutil.rmtree(self.macosx)
+        # 处理 Info.plist
+        self._prepare_info_plist()
 
         # 删除 - unrestrict
         self._prepare_mach_o()
@@ -212,8 +197,36 @@ class ESigner(object):
         # clean tmp
         self._clean_tmp_files()
 
+    def _prepare_recourse(self):
+        # 删除 - plugins
+        if os.path.exists(self.plugins_dir):
+            shutil.rmtree(self.plugins_dir)
+            # self._pre_codesign_plugins()
+
+        # 删除 - SC_Info
+        if os.path.exists(self.sc_info_dir):
+            shutil.rmtree(self.sc_info_dir)
+
+        # 删除 - Watch
+        if os.path.exists(self.watch_dir):
+            shutil.rmtree(self.watch_dir)
+
+        # 删除 - .DS_Store
+        if os.path.exists(self.ds_store):
+            shutil.rmtree(self.ds_store)
+
+        # 删除 - __MACOSX
+        if os.path.exists(self.macosx):
+            shutil.rmtree(self.macosx)
+
+    def _prepare_info_plist(self):
+        subprocess.getoutput(
+            '/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily"  {}'.format(
+                self.info_plist_file_path
+            )
+        )
+
     def _prepare_mach_o(self):
-        print(f"xxx {self.target_app_path}");
         EBinTool.optool_delete_unrestrict(self.execute_path)
 
     def _clean_tmp_files(self):
