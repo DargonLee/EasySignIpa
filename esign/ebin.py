@@ -20,7 +20,7 @@ class EBinTool(object):
     def install_app(target_app_path, install_type):
         print(Logger.green("✅ install app"))
         print("[-]Install AppPath => {}".format(target_app_path))
-        install_cmd = "{} {} {} -W".format(
+        install_cmd = "{} -{} {} -W".format(
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )
         print(f"[-] {install_cmd}")
