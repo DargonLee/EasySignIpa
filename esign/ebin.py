@@ -17,12 +17,9 @@ def get_os():
 
 class EBinTool(object):
     @staticmethod
-    def install_app(target_app_path, IS_REINSTALL=False):
+    def install_app(target_app_path, install_type):
         print(Logger.green("✅ install app"))
         print("[-]Install AppPath => {}".format(target_app_path))
-        install_type = "-b"
-        if IS_REINSTALL:
-            install_type = "-rb"
         install_cmd = "{} {} {} -W".format(
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )

@@ -194,8 +194,7 @@ class ESigner(object):
         self._print_app_info()
 
         # 安装 - app
-        if self.install_type is not None:
-            EBinTool.install_app(self.target_app_path)
+        EBinTool.install_app(self.target_app_path, install_type)
 
         # clean tmp
         self._clean_tmp_files()
