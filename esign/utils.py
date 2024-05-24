@@ -12,4 +12,6 @@ ZSIGN_PATH = os.path.join(ESIGN_DIR_PATH, "bin/zsign")
 RESTORE_SYMBOL_PATH = os.path.join(ESIGN_DIR_PATH, "bin/restore-symbol")
 UN_SIGN_PATH = os.path.join(ESIGN_DIR_PATH, "bin/unsign")
 EMBEDDED_ENTITLEMENTS = "entitlements.plist"
+EMBEDDED_ORI_ENTITLEMENTS = "ori_entitlements.plist"
+EMBEDDED_PRO_ENTITLEMENTS = "pro_entitlements.plist"
 PROFILE_PLIST = "profile.plist"

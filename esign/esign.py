@@ -1,17 +1,20 @@
 import os
 import shutil
 import subprocess
-from esign.eprovision import EProvision
-from esign.ezip import EZipFile
+import plistlib
 from esign.elogger import Logger
 from esign.econfig import EConfigHandler
 from esign.ebin import EBinTool
+from esign.eprovision import EProvision
+from esign.ezip import EZipFile
 from esign.utils import (
     SETTINGS_PATH,
     PROVISIONS_DIR_PATH,
     ESIGN_DIR_PATH,
     PROFILE_PLIST,
     EMBEDDED_ENTITLEMENTS,
+    EMBEDDED_ORI_ENTITLEMENTS,
+    EMBEDDED_PRO_ENTITLEMENTS
 )
 
 
@@ -244,15 +247,39 @@ class ESigner(object):
         if os.path.exists(self.entitlements_file):
             os.remove(self.entitlements_file)
 
+        ori_entitlements_plist = os.path.join(ESIGN_DIR_PATH, EMBEDDED_ORI_ENTITLEMENTS)
+        if os.path.exists(ori_entitlements_plist):
+            os.remove(ori_entitlements_plist)
+        EBinTool.dump_app_entitlements(self.target_app_path, ori_entitlements_plist)
+        if not os.path.exists(ori_entitlements_plist):
+            raise Exception("dump app entitlements fail")
+        with open(ori_entitlements_plist, 'rb') as f:
+            original_entitlements = plistlib.load(f)
+            if len(original_entitlements) == 0:
+                raise Exception("dump app entitlements fail")
+
+        pro_entitlements_plist = os.path.join(ESIGN_DIR_PATH, EMBEDDED_PRO_ENTITLEMENTS)
+        if os.path.exists(pro_entitlements_plist):
+            os.remove(pro_entitlements_plist)
+        self._execute_shell(
+            "security cms -D -i {} > {}".format(
+                self.mobileprovision_path, pro_entitlements_plist
+            )
+        )
+        if not os.path.exists(pro_entitlements_plist):
+            raise Exception("dump mobileprovision entitlements fail")
+        with open(pro_entitlements_plist, 'rb') as f:
+            original_entitlements = plistlib.load(f)
+            if len(original_entitlements) == 0:
+                raise Exception("dump mobileprovision entitlements fail")
+
         profile_plist = os.path.join(ESIGN_DIR_PATH, PROFILE_PLIST)
         if os.path.exists(profile_plist):
             os.remove(profile_plist)
+        self._merge_entitlements(ori_entitlements_plist, pro_entitlements_plist, profile_plist)
+        if not os.path.exists(profile_plist):
+            raise Exception("merge entitlements fail")
 
-        self._execute_shell(
-            "security cms -D -i {} > {}".format(
-                self.mobileprovision_path, profile_plist
-            )
-        )
         self._execute_shell(
             "/usr/libexec/PlistBuddy -x -c 'Print :Entitlements' {} > {}".format(
                 profile_plist, self.entitlements_file
@@ -266,6 +293,19 @@ class ESigner(object):
         )
 
         print("[-]cms embedded done")
+
+    def _merge_entitlements(self, original_file, pro_file, output_file):
+        with open(original_file, 'rb') as f:
+            original_entitlements = plistlib.load(f)
+
+        with open(pro_file, 'rb') as f:
+            pro_entitlements = plistlib.load(f)
+
+        merged_entitlements = original_entitlements.copy()
+        merged_entitlements.update(pro_entitlements)
+
+        with open(output_file, 'wb') as f:
+            plistlib.dump(merged_entitlements, f)
 
     def _inject_dylib(self):
         # /usr/libexec/PlistBuddy -c "Print :CFBundleName" "${INFOPLIST}"

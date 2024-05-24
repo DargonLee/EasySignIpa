@@ -33,12 +33,23 @@ class EBinTool(object):
     def codesign_app(target_app_path, entitlements_file, identity):
         print(Logger.green("👉🏻 begin codesigning app"))
         print("[-]AppPath => {}".format(target_app_path))
+        print("[-]EntitlementsPath => {}".format(entitlements_file))
         print("[-]CodesigningIdentity => {}".format(identity))
         codesign_cmd = "codesign -f -s {} --entitlements {} {}".format(
             identity, entitlements_file, target_app_path
         )
         codesign_cmd_result = subprocess.getoutput(codesign_cmd)
         print("{}".format(codesign_cmd_result))
+        print(Logger.green("🔚 codesigning app done"))
+
+    @staticmethod
+    def dump_app_entitlements(target_app_path, entitlements_file):
+        print(Logger.green("👉🏻 begin dump app entitlements"))
+        print("[-]AppPath => {}".format(target_app_path))
+        print("[-]New EntitlementsPath => {}".format(entitlements_file))
+        dump_app_cmd = "codesign -d --entitlements :- {} > {}".format(target_app_path, entitlements_file)
+        dump_app_cmd_result = subprocess.getoutput(dump_app_cmd)
+        print("{}".format(dump_app_cmd_result))
 
     @staticmethod
     def codesign_dylib(dylib_framework_path, identity):
