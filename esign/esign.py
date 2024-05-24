@@ -55,7 +55,7 @@ class ESigner(object):
         self._execute_shell("security find-identity -v -p codesigning")
         self.identity = input(Logger.green("Please select the identity value for the certificate :"))
         self.config.set_identity(self.identity)
-        print('[-]setEnv: identity => {}'.format(self.identity))
+        print('[*] SetEnv identity: {}'.format(self.identity))
 
     def check_mobileprovision(self):
         self.mobileprovision_path = self.config.get_mobileprovision_path()
@@ -70,13 +70,13 @@ class ESigner(object):
             raise Exception(f"{self.mobileprovision_path} not exist")
         shutil.copy(self.mobileprovision_path, PROVISIONS_DIR_PATH)
         self.config.set_mobileprovision_path(self.mobileprovision_path)
-        print(f'[-]setEnv: mobileprovision => {self.mobileprovision}')
+        print(f'[*] SetEnv mobileprovision file: {self.mobileprovision}')
 
     def set_run_env(self):
         self.set_identity()
         self.set_mobileprovision()
         result = self.provision.contain_cer_identity(self.identity)
-        print(f'[-]setEnv: result => {result}')
+        print(f'[*] SetEnv result: {result}')
         return result
 
     def check_run_env(self):
@@ -85,10 +85,10 @@ class ESigner(object):
         return self.provision.contain_cer_identity(self.identity)
 
     def _prepare_app_path(self):
-        print(Logger.green("✅ prepare app"))
+        print(Logger.blue("👉🏻 prepare app"))
 
         self.current_path = os.getcwd()
-        print(f"[-]prepare: current_path => {self.current_path}")
+        print(f"[*] Prepare current path: {self.current_path}")
 
         app_path, extension = os.path.splitext(self.target_app_path)
         app_extension = extension[1:]
@@ -96,10 +96,10 @@ class ESigner(object):
         self.app_name = app_name
 
         if not os.path.exists(self.target_app_path):
-            print(f"[-]Error: {self.target_app_path} does not exist.")
+            print(Logger.error(f"Error: {self.target_app_path} does not exist."))
             exit(1)
         if app_extension != "ipa" and app_extension != "app":
-            print(f"[-]Error: {self.target_app_path} does not support.")
+            print(Logger.error(f"[-]Error: {self.target_app_path} does not support."))
             exit(1)
 
         if app_extension == "ipa":
@@ -115,7 +115,7 @@ class ESigner(object):
             payload_path = os.path.join(self.tempdir, "Payload")
             self.payload_path = payload_path
 
-        print(f"[-]prepare: AppPath => {self.target_app_path}")
+        print(f"[*] Prepare appPath: {self.target_app_path}")
         if not os.path.exists(self.target_app_path):
             raise Exception("{} not exist".format(self.app_name))
 
@@ -126,6 +126,7 @@ class ESigner(object):
         self.watch_dir = os.path.join(self.target_app_path, "Watch")
         self.ds_store = os.path.join(self.payload_path, ".DS_Store")
         self.macosx = os.path.join(self.payload_path, "__MACOSX")
+        self.code_signature = os.path.join(self.payload_path, "_CodeSignature")
 
         self.executable_name = subprocess.getoutput(
             '/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable"  {}'.format(
@@ -134,11 +135,11 @@ class ESigner(object):
         )
         self.execute_path = os.path.join(self.target_app_path, self.executable_name)
 
-        print(f"[-]prepare info_plist_file_path => : {self.info_plist_file_path}")
-        print(f"[-]prepare frameworks_dir => : {self.frameworks_dir}")
-        print(f"[-]prepare plugins_dir => : {self.plugins_dir}")
-        print(f"[-]prepare target_app_path => : {self.target_app_path}")
-        print(f"[-]prepare tempdir => : {self.tempdir}")
+        print(f"[*] Info plist file path: {self.info_plist_file_path}")
+        print(f"[*] Frameworks dir: {self.frameworks_dir}")
+        print(f"[*] Plugins dir: {self.plugins_dir}")
+        print(f"[*] Target app path: {self.target_app_path}")
+        print(f"[*] Tempdir: {self.tempdir}")
 
     def _check_resign_env(self):
         if not os.path.exists(self.info_plist_file_path):
@@ -160,7 +161,7 @@ class ESigner(object):
         self._prepare_app_path()
 
         print(Logger.green("✅ resign info"))
-        print("[-]resign: AppName: {}".format(self.app_name))
+        print("[*] AppName: {}".format(self.app_name))
 
         # 检测重签环境
         self._check_resign_env()
@@ -226,6 +227,10 @@ class ESigner(object):
         # 删除 - __MACOSX
         if os.path.exists(self.macosx):
             shutil.rmtree(self.macosx)
+
+        # 删除 - _CodeSignature
+        if os.path.exists(self.code_signature):
+            shutil.rmtree(self.code_signature)
 
     def _prepare_info_plist(self):
         subprocess.getoutput(
@@ -297,8 +302,6 @@ class ESigner(object):
             + "{}/embedded.mobileprovision".format(self.target_app_path)
         )
 
-        print("[-]cms embedded done")
-
     def _merge_entitlements(self, original_file, pro_file, output_file):
         with open(original_file, 'rb') as f:
             original_entitlements = plistlib.load(f)
@@ -319,7 +322,7 @@ class ESigner(object):
         print("[-]dylibs => {}".format(self.inject_dylib_list))
         print("[-]Info.plist path => {}".format(self.info_plist_file_path))
         if len(self.inject_dylib_list) == 0:
-            print(Logger.yellow("⚠️  Warn: no dylibs need to inject"))
+            print(Logger.yellow("⚠️ no dylibs need to inject"))
             return
 
         def _inject_action(dylib_path):
@@ -337,7 +340,7 @@ class ESigner(object):
             else:
                 raise Exception(f"[-]dylib_extension not support => {dylib_extension}")
 
-            print(f"[-]inject dylib => {dylib_name}")
+            print(f"[*] Inject dylib name: {dylib_name}")
             bundle_name = subprocess.getoutput(
                 '/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable"  {}'.format(
                     self.info_plist_file_path
@@ -349,12 +352,12 @@ class ESigner(object):
                 os.makedirs(app_frameworks_path)
             dylib_framework_path = os.path.join(app_frameworks_path, dylib_framework_name)
 
-            print(f"[-]execu_table_path => {execu_table_path}")
-            print(f"[-]app_frameworks_path => {app_frameworks_path}")
-            print(f"[-]dylib_framework_path => {dylib_framework_path}")
+            print(f"[*] Executable path: {execu_table_path}")
+            print(f"[*] App Frameworks path: {app_frameworks_path}")
+            print(f"[*] Dylib Framework path: {dylib_framework_path}")
 
             if os.path.exists(dylib_framework_path):
-                print(f"[-]update dylib => {dylib_name}")
+                print(f"[*] Update dylib: {dylib_name}")
                 self._execute_shell(f"rm -rf {dylib_framework_path}")
             else:
                 optool_cmd_result = EBinTool.optool_inject(framework_name, execu_table_path)
@@ -368,7 +371,7 @@ class ESigner(object):
             _inject_action(dylib)
 
     def _pre_codesign_dylib(self):
-        print(Logger.green("👉🏻 begin codesigning frameworks"))
+        print(Logger.blue("👉🏻 begin codesigning frameworks"))
         frameworks = []
         for root, dirs, files in os.walk(self.frameworks_dir):
             frameworks = dirs
@@ -381,7 +384,7 @@ class ESigner(object):
             EBinTool.codesign_dylib(framework_mach_o_path, self.identity)
 
     def _pre_codesign_plugins(self):
-        print(Logger.green("👉🏻 begin codesigning plugins"))
+        print(Logger.green("✅ begin codesigning plugins"))
         plugins = []
         for root, dirs, files in os.walk(self.plugins_dir):
             plugins = dirs
@@ -399,8 +402,8 @@ class ESigner(object):
             self.tempdir, "Payload"
         )
         payload_app_path = os.path.join(payload_path, os.path.basename(self.target_app_path))
-        print(f"zip: payload_path {payload_app_path}")
-        print(f"zip: tempdir {self.tempdir}")
+        print(f"[*] zip payload path: {payload_app_path}")
+        print(f"[*] zip tempdir path: {self.tempdir}")
         if os.path.exists(payload_app_path):
             shutil.rmtree(payload_app_path)
         shutil.copytree(self.target_app_path, payload_app_path)
@@ -445,10 +448,10 @@ class ESigner(object):
             )
         )
         print(Logger.green("✅ app base info"))
-        print(f"[-]BundleName => {bundle_name}")
-        print(f"[-]BundleID => {bundle_id}")
-        print(f"[-]ShortVersion => {short_version}")
-        print(f"[-]ExecutableName => {executable_name}")
+        print(f"[*] BundleName: {bundle_name}")
+        print(f"[*] BundleID: {bundle_id}")
+        print(f"[*] ShortVersion: {short_version}")
+        print(f"[*] ExecutableName: {executable_name}")
 
     def _execute_shell(self, command_string):
         subprocess.call(command_string, shell=True)
