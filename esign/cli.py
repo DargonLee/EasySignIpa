@@ -24,7 +24,6 @@ def main():
     parser.add_argument("-info", "--info", help="print Info.plist content", action="store_true",)
 
     group = parser.add_mutually_exclusive_group(required=False)
-
     group.add_argument(
         "-b",
         "--install",
