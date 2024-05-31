@@ -21,7 +21,7 @@ def main():
         "-l", "--inject", help="injecting dynamic library into the app", type=str
     )
     parser.add_argument("-o", "--output", help="output the resigned ipa", type=str)
-    parser.add_argument("-info", "--info", help="print Info.plish content", action="store_true",)
+    parser.add_argument("-info", "--info", help="print Info.plist content", action="store_true",)
 
     group = parser.add_mutually_exclusive_group(required=False)
 
