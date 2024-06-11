@@ -109,10 +109,10 @@ class ESigner(object):
             self.tempdir = tempfile.mkdtemp()
             EZipFile.unzip_file(self.target_app_path, self.tempdir)
             self.payload_path = os.path.join(self.tempdir, "Payload")
-            if len(os.listdir(self.payload_path)) == 1:
-                self.app_name = os.listdir(self.payload_path)[0]
-            else:
-                self.app_name = os.listdir(self.payload_path)[1]
+            tmp_list = os.listdir(self.payload_path)
+            if len(tmp_list) == 2 and '.DS_Store' in tmp_list:
+                tmp_list.remove('.DS_Store')
+            self.app_name = tmp_list[0]
             self.target_app_path = os.path.join(self.payload_path, self.app_name)
         else:
             self.tempdir = os.path.dirname(self.target_app_path)
@@ -247,7 +247,7 @@ class ESigner(object):
             '/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily"  {}'.format(
                 self.info_plist_file_path
             )
-        ).strip()
+        )
 
         print(Logger.blue("👉🏻 prepare_info_plist"))
 
