@@ -3,6 +3,8 @@ import os
 import shutil
 import subprocess
 import plistlib
+from pathlib import Path
+
 from esign.elogger import Logger
 from esign.econfig import EConfigHandler
 from esign.ebin import EBinTool
@@ -106,10 +108,12 @@ class ESigner(object):
             import tempfile
             self.tempdir = tempfile.mkdtemp()
             EZipFile.unzip_file(self.target_app_path, self.tempdir)
-            payload_path = os.path.join(self.tempdir, "Payload")
-            self.payload_path = payload_path
-            self.app_name = os.listdir(payload_path)[0]
-            self.target_app_path = os.path.join(payload_path, self.app_name)
+            self.payload_path = os.path.join(self.tempdir, "Payload")
+            if len(os.listdir(self.payload_path)) == 1:
+                self.app_name = os.listdir(self.payload_path)[0]
+            else:
+                self.app_name = os.listdir(self.payload_path)[1]
+            self.target_app_path = os.path.join(self.payload_path, self.app_name)
         else:
             self.tempdir = os.path.dirname(self.target_app_path)
             payload_path = os.path.join(self.tempdir, "Payload")
@@ -221,8 +225,9 @@ class ESigner(object):
             shutil.rmtree(self.watch_dir)
 
         # 删除 - .DS_Store
-        if os.path.exists(self.ds_store):
-            shutil.rmtree(self.ds_store)
+        ds_file_path = Path(self.ds_store)
+        if ds_file_path.is_file():
+            os.remove(ds_file_path)
 
         # 删除 - __MACOSX
         if os.path.exists(self.macosx):
