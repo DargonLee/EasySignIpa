@@ -21,7 +21,9 @@ def main():
         "-l", "--inject", help="injecting dynamic library into the app", type=str
     )
     parser.add_argument("-o", "--output", help="output the resigned ipa", type=str)
-    parser.add_argument("-info", "--info", help="print Info.plist content", action="store_true",)
+    parser.add_argument("--bundle_id", help="modify app bundle id value", type=str)
+    parser.add_argument("--bundle_name", help="modify app bundle display name", type=str)
+    parser.add_argument("--info", help="print Info.plist content", action="store_true",)
 
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument(
@@ -64,7 +66,13 @@ def main():
             exit(1)
 
         app_path = os.path.abspath(args.sign)
-        esign_obj.resign(app_path, inject_dylib_list, output_path, install_type, args.info)
+        esign_obj.resign(app_path,
+                         inject_dylib_list,
+                         output_path,
+                         install_type,
+                         args.info,
+                         args.bundle_id,
+                         args.bundle_name)
 
     if args.config:
         if not esign_obj.set_run_env():

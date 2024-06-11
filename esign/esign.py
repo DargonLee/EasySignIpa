@@ -155,12 +155,17 @@ class ESigner(object):
             dylib_list=[],
             output_dir=None,
             install_type=None,
-            is_print_info=False
+            is_print_info=False,
+            bundle_id=None,
+            bundle_name=None
     ):
         self.target_app_path = app_path
         self.inject_dylib_list = dylib_list
         self.output_dir = output_dir
         self.install_type = install_type
+
+        self.bundle_id = bundle_id
+        self.bundle_name = bundle_name
 
         self._prepare_app_path()
 
@@ -242,7 +247,27 @@ class ESigner(object):
             '/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily"  {}'.format(
                 self.info_plist_file_path
             )
-        )
+        ).strip()
+
+        print(Logger.blue("👉🏻 prepare_info_plist"))
+
+        self.ori_bundle_id = subprocess.getoutput(
+            f'/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "{self.info_plist_file_path}"').strip()
+        print("[-]origin bundle id => {}".format(self.ori_bundle_id))
+
+        self.ori_bundle_name = subprocess.getoutput(
+            f'/usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "{self.info_plist_file_path}"').strip()
+        print("[-]origin bundle display name => {}".format(self.ori_bundle_name))
+
+        if self.bundle_id:
+            subprocess.getoutput(
+                f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {self.bundle_id}" "{self.info_plist_file_path}"')
+            print("[-]new bundle id => {}".format(self.bundle_id))
+
+        if self.bundle_name:
+            subprocess.getoutput(
+                f'/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName {self.bundle_name}" "{self.info_plist_file_path}"')
+            print("[-]new bundle display name is => {}".format(self.bundle_name))
 
     def _prepare_mach_o(self):
         EBinTool.optool_delete_unrestrict(self.execute_path)
