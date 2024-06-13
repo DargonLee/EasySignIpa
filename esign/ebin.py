@@ -4,7 +4,6 @@ import platform
 from esign.elogger import Logger
 from esign.utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH, JTOOL2_PATH
 
-
 def get_os():
     os_name = platform.system()
     if os_name == "Windows":
@@ -45,6 +44,16 @@ class EBinTool(object):
         print("[*] New EntitlementsPath: {}".format(entitlements_file))
         dump_app_cmd = "codesign -d --entitlements :- {} > {}".format(target_app_path, entitlements_file)
         dump_app_cmd_result = subprocess.getoutput(dump_app_cmd)
+        if "warning" in dump_app_cmd_result:
+            app_name_with_extension = os.path.basename(target_app_path)
+            app_name = os.path.splitext(app_name_with_extension)[0]
+            new_target_app_path = os.path.join(target_app_path, app_name)
+            jtool2_cmd = "{} --ent {} > {}".format(
+                JTOOL2_PATH, new_target_app_path, entitlements_file
+            )
+            print(f"[*] {jtool2_cmd}")
+            jtool2_cmd_result = subprocess.getoutput(jtool2_cmd)
+            print("[*] jtool2_cmd result: {}".format(jtool2_cmd_result))
         print("[*] Dump app result {}".format(dump_app_cmd_result))
 
     @staticmethod
