@@ -18,10 +18,11 @@ def get_os():
 
 class EBinTool(object):
     @staticmethod
-    def run_sub_command(command):
-        process = Popen(shlex.split(command), stdout=PIPE)
+    def run_sub_command(cmd_line):
+        args = shlex.split(cmd_line)
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         while True:
-            output = process.stdout.readline().rstrip().decode('utf-8')
+            output = process.stdout.readline().rstrip()
             if output == '' and process.poll() is not None:
                 break
             if output:
@@ -35,10 +36,10 @@ class EBinTool(object):
         install_cmd = "{} -{} {} -W".format(
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )
-        print(f"[*] {install_cmd}")
+        # print(f"[*] {install_cmd}")
         # install_cmd_result = subprocess.getoutput(install_cmd)
         return_code = EBinTool.run_sub_command(install_cmd)
-        print("[*] install_cmd result: {}".format(return_code))
+        print("[*] install_cmd done with result code {}".format(return_code))
 
     @staticmethod
     def codesign_app(target_app_path, entitlements_file, identity):
