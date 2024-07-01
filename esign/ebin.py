@@ -1,6 +1,8 @@
 import subprocess
 import os
+import shlex
 import platform
+from subprocess import Popen, PIPE
 from esign.elogger import Logger
 from esign.utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH, JTOOL2_PATH
 
@@ -16,6 +18,17 @@ def get_os():
 
 class EBinTool(object):
     @staticmethod
+    def run_sub_command(command):
+        process = Popen(shlex.split(command), stdout=PIPE)
+        while True:
+            output = process.stdout.readline().rstrip().decode('utf-8')
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+        rc = process.poll()
+        return rc
+    @staticmethod
     def install_app(target_app_path, install_type):
         print(Logger.green("✅ install app"))
         print("[*] Install AppPath: {}".format(target_app_path))
@@ -23,8 +36,9 @@ class EBinTool(object):
             IOS_DEPLOY_NEW_PATH, install_type, target_app_path
         )
         print(f"[*] {install_cmd}")
-        install_cmd_result = subprocess.getoutput(install_cmd)
-        print("[*] install_cmd result: {}".format(install_cmd_result))
+        # install_cmd_result = subprocess.getoutput(install_cmd)
+        return_code = EBinTool.run_sub_command(install_cmd)
+        print("[*] install_cmd result: {}".format(return_code))
 
     @staticmethod
     def codesign_app(target_app_path, entitlements_file, identity):
@@ -109,7 +123,8 @@ if __name__ == "__main__":
     #     "/Users/apple/Downloads/Payload/Vss.framework",
     #     " /Users/apple/Downloads/Payload/sacurity.app/sacurity",
     # )
-    EBinTool.optool_inject(
-        "/Users/apple/Downloads/Payload/libMacBox.dylib",
-        " /Users/apple/Downloads/Payload/sacurity.app/sacurity",
-    )
+    # EBinTool.optool_inject(
+    #     "/Users/apple/Downloads/Payload/libMacBox.dylib",
+    #     " /Users/apple/Downloads/Payload/sacurity.app/sacurity",
+    # )
+    EBinTool.install_app("/Users/apple/Downloads/Payload/Lark.app", "b")
