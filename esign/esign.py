@@ -176,7 +176,7 @@ class ESigner(object):
         self._check_resign_env()
 
         #资源处理
-        self._prepare_recourse()
+        # self._prepare_recourse()
 
         # 处理 Info.plist
         self._prepare_info_plist()
@@ -243,11 +243,11 @@ class ESigner(object):
             shutil.rmtree(self.code_signature)
 
     def _prepare_info_plist(self):
-        subprocess.getoutput(
-            '/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily"  {}'.format(
-                self.info_plist_file_path
-            )
-        )
+        # subprocess.getoutput(
+        #     '/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily"  {}'.format(
+        #         self.info_plist_file_path
+        #     )
+        # )
 
         print(Logger.blue("👉🏻 prepare_info_plist"))
 
