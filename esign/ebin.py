@@ -39,7 +39,7 @@ class EBinTool(object):
         # print(f"[*] {install_cmd}")
         # install_cmd_result = subprocess.getoutput(install_cmd)
         return_code = EBinTool.run_sub_command(install_cmd)
-        print("[*] install_cmd done with result code {}".format(return_code))
+        print("[Done] install_cmd done with result code {}".format(return_code))
 
     @staticmethod
     def codesign_app(target_app_path, entitlements_file, identity):
