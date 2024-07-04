@@ -35,7 +35,7 @@ class InstallCommand(Command):
 setup(
     name="esign",
     description="A command-line tool for re-signing iOS IPA files",
-    version="0.7.0",
+    version="0.8.0",
     license="MIT",
     author="Harlans",
     author_email="2461414445@qq.com",

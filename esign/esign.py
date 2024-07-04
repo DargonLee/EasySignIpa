@@ -38,53 +38,49 @@ class ESigner(object):
         self.executable_name = None
 
         self.config = EConfigHandler(SETTINGS_PATH)
-        self.identity = self.config.get_identity() or None
-        self.mobileprovision_path = self.config.get_mobileprovision_path() or None
-        if self.mobileprovision_path:
-            self.provision = EProvision(self.mobileprovision_path)
-
-    @property
-    def mobileprovision(self):
-        file_name_with_extension = os.path.basename(self.mobileprovision_path)
-        return file_name_with_extension
 
     def check_identity(self):
-        self.identity = self.config.get_identity()
-        if not self.identity:
-            self.set_identity()
-
-    def set_identity(self):
-        self._execute_shell("security find-identity -v -p codesigning")
-        self.identity = input(Logger.green("Please select the identity value for the certificate :"))
-        self.config.set_identity(self.identity)
-        print('[*] SetEnv identity: {}'.format(self.identity))
+        if not self.config.get_identity():
+            self._execute_shell("security find-identity -v -p codesigning")
+            identity = input(Logger.green("Please select the [debug] identity value for the certificate :"))
+            self.config.set_identity(identity)
+            print('[*] SetEnv [debug] identity: {} success'.format(identity))
 
     def check_mobileprovision(self):
-        self.mobileprovision_path = self.config.get_mobileprovision_path()
-        if not self.mobileprovision_path:
-            self.set_mobileprovision()
-        self.provision = EProvision(self.mobileprovision_path)
+        mobileprovision_path = self.config.get_mobileprovision_path()
+        if not mobileprovision_path:
+            mobileprovision_path = input(
+                Logger.green("Please provide the full path to the [debug] provisioning profile file :"))
+            if not os.path.exists(mobileprovision_path):
+                raise Exception(f"{mobileprovision_path} not exist")
+            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
+            self.config.set_mobileprovision_path(mobileprovision_path)
+            print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_path}')
 
-    def set_mobileprovision(self):
-        self.mobileprovision_path = input(
-            Logger.green("Please provide the full path to the provisioning profile file :"))
-        if not os.path.exists(self.mobileprovision_path):
-            raise Exception(f"{self.mobileprovision_path} not exist")
-        shutil.copy(self.mobileprovision_path, PROVISIONS_DIR_PATH)
-        self.config.set_mobileprovision_path(self.mobileprovision_path)
-        print(f'[*] SetEnv mobileprovision file: {self.mobileprovision}')
+    def check_release_identity(self):
+        if not self.config.get_release_identity():
+            self._execute_shell("security find-identity -v -p codesigning")
+            identity = input(Logger.green("Please select the [release] identity value for the certificate :"))
+            self.config.set_release_identity(identity)
+            print('[*] SetEnv [release] identity: {} success'.format(identity))
 
-    def set_run_env(self):
-        self.set_identity()
-        self.set_mobileprovision()
-        result = self.provision.contain_cer_identity(self.identity)
-        print(f'[*] SetEnv result: {result}')
-        return result
+    def check_release_mobileprovision(self):
+        if not self.config.get_release_mobileprovision_path():
+            mobileprovision_path = input(
+                Logger.green("Please provide the full path to the [release] provisioning profile file :"))
+            if not os.path.exists(mobileprovision_path):
+                raise Exception(f"{mobileprovision_path} not exist")
+            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
+            self.config.set_release_mobileprovision_path(mobileprovision_path)
+            print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_path}')
+
+    def check_release_run_env(self):
+        self.check_release_identity()
+        self.check_release_mobileprovision()
 
     def check_run_env(self):
         self.check_identity()
         self.check_mobileprovision()
-        return self.provision.contain_cer_identity(self.identity)
 
     def _prepare_app_path(self):
         print(Logger.blue("👉🏻 prepare app"))
@@ -157,18 +153,36 @@ class ESigner(object):
             install_type=None,
             is_print_info=False,
             bundle_id=None,
-            bundle_name=None
+            bundle_name=None,
+            build_configuration='debug',
     ):
         self.target_app_path = app_path
         self.inject_dylib_list = dylib_list
         self.output_dir = output_dir
         self.install_type = install_type
-
         self.bundle_id = bundle_id
         self.bundle_name = bundle_name
+        self.build_configuration = build_configuration
 
+        # 签名模式 debug ｜ release 检测
+        build_status = build_configuration == 'debug'
+        if build_status:
+            self.check_run_env()
+        else:
+            self.check_release_run_env()
+
+
+        # 证书和描述文件
+        self.identity = self.config.get_identity() if build_status else self.config.get_release_identity()
+        self.mobileprovision_path = self.config.get_mobileprovision_path() if build_status else self.config.get_release_mobileprovision_path()
+        if self.mobileprovision_path:
+            self.provision = EProvision(self.mobileprovision_path)
+            result = self.provision.contain_cer_identity(self.identity)
+            print(f'[*] SetEnv EProvision result: {result}')
+
+
+        # app 签名准备
         self._prepare_app_path()
-
         print(Logger.green("✅ resign info"))
         print("[*] AppName: {}".format(self.app_name))
 
@@ -206,7 +220,8 @@ class ESigner(object):
         self._print_app_info()
 
         # 安装 - app
-        EBinTool.install_app(self.target_app_path, install_type)
+        if self.install_type:
+            EBinTool.install_app(self.target_app_path, install_type)
 
         # 打印Info.plist文件所有内容
         if is_print_info:

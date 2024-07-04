@@ -13,26 +13,25 @@ def parse_prompt_arg(prompt_arg):
 
 def main():
     parser = argparse.ArgumentParser(description="ipa re-signature command tool")
-    parser.add_argument(
-        "-c", "--config", help="config signing cert and provision", action="store_true"
-    )
     parser.add_argument("-s", "--sign", help="re-signing the .ipa or .app", type=str)
     parser.add_argument(
         "-l", "--inject", help="injecting dynamic library into the app", type=str
     )
     parser.add_argument("-o", "--output", help="output the resigned ipa", type=str)
+    parser.add_argument("-m", "--build_configuration", help="debug or release default: debug", default="debug", type=str)
+
     parser.add_argument("--bundle_id", help="modify app bundle id value", type=str)
     parser.add_argument("--bundle_name", help="modify app bundle display name", type=str)
     parser.add_argument("--info", help="print Info.plist content", action="store_true",)
 
-    group = parser.add_mutually_exclusive_group(required=False)
-    group.add_argument(
+    group_install = parser.add_mutually_exclusive_group(required=False)
+    group_install.add_argument(
         "-b",
         "--install",
         help="install the re-signed ipa onto the device connected via USB.",
         action="store_true",
     )
-    group.add_argument(
+    group_install.add_argument(
         "-rb",
         "--reinstall",
         help="uninstall the app with the same package name on the device first, and then install the re-signed app.",
@@ -61,10 +60,6 @@ def main():
 
     esign_obj = ESigner()
     if args.sign:
-        if not esign_obj.check_run_env():
-            print(f"Error: {esign_obj.identity} does not Correspondence with {esign_obj.mobileprovision}.")
-            exit(1)
-
         app_path = os.path.abspath(args.sign)
         esign_obj.resign(app_path,
                          inject_dylib_list,
@@ -72,15 +67,9 @@ def main():
                          install_type,
                          args.info,
                          args.bundle_id,
-                         args.bundle_name)
-
-    if args.config:
-        if not esign_obj.set_run_env():
-            print(f"Error: {esign_obj.identity} does not Correspondence with {esign_obj.mobileprovision}.")
-            exit(1)
-        else:
-            print("Success: config signing cert and provision.")
-
+                         args.bundle_name,
+                         args.build_configuration,
+                         )
 
 if __name__ == "__main__":
     main()

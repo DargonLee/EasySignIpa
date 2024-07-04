@@ -7,10 +7,15 @@ class EConfigHandler(object):
         self.identity_key = "codesign_identity_value"
         self.mobileprovision_path_key = "embedded_mobileprovision_path"
 
+        self.section_release_key = "RDEFAULTCONFIG"
+        self.identity_release_key = "codesign_identity_value_release"
+        self.mobileprovision_path_release_key = "embedded_mobileprovision_path_release"
+
         self.path = path
         self.config = configparser.ConfigParser()
         self.config.read(self.path, encoding="utf-8")
 
+    ### core
     def get(self, section, option):
         if section not in self.config.sections():
             return None
@@ -26,6 +31,7 @@ class EConfigHandler(object):
         with open(self.path, "w") as configfile:
             self.config.write(configfile)
 
+    ### debug
     def get_identity(self):
         return self.get(self.section_key, self.identity_key)
 
@@ -37,6 +43,19 @@ class EConfigHandler(object):
 
     def set_mobileprovision_path(self, path):
         self.set(self.section_key, self.mobileprovision_path_key, path)
+
+    ### release
+    def get_release_identity(self):
+        return self.get(self.section_release_key, self.identity_release_key)
+
+    def set_release_identity(self, identity):
+        self.set(self.section_release_key, self.identity_release_key, identity)
+
+    def get_release_mobileprovision_path(self):
+        return self.get(self.section_release_key, self.mobileprovision_path_release_key)
+
+    def set_release_mobileprovision_path(self, path):
+        self.set(self.section_release_key, self.mobileprovision_path_release_key, path)
 
 
 if __name__ == "__main__":
