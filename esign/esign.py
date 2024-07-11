@@ -336,7 +336,7 @@ class ESigner(object):
         profile_plist = os.path.join(ESIGN_DIR_PATH, PROFILE_PLIST)
         if os.path.exists(profile_plist):
             os.remove(profile_plist)
-         self._merge_entitlements(ori_entitlements_plist, pro_entitlements_plist, profile_plist, is_dump_appent_fail)
+        self._merge_entitlements(ori_entitlements_plist, pro_entitlements_plist, profile_plist, is_dump_appent_fail)
         if not os.path.exists(profile_plist):
             raise Exception("merge entitlements fail")
 
