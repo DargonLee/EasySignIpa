@@ -1,3 +1,4 @@
+import plistlib
 import subprocess
 import os
 import shlex
@@ -59,7 +60,20 @@ class EBinTool(object):
         print("[*] New EntitlementsPath: {}".format(entitlements_file))
         dump_app_cmd = "codesign -d --entitlements :- {} > {}".format(target_app_path, entitlements_file)
         dump_app_cmd_result = subprocess.getoutput(dump_app_cmd)
-        if "warning" in dump_app_cmd_result:
+
+        is_dump_success = False
+        if os.path.exists(entitlements_file):
+            with open(entitlements_file, 'rb') as f:
+                plist_data = plistlib.load(f)
+                if len(plist_data) > 0:
+                    is_dump_success = True
+
+        if is_dump_success:
+            print(Logger.blue("[*] Use Codesign Dump app entitlements"))
+        else:
+            print(Logger.blue("[*] Use Jtool2 Dump app entitlements"))
+
+        if not is_dump_success and "warning" in dump_app_cmd_result:
             app_name_with_extension = os.path.basename(target_app_path)
             app_name = os.path.splitext(app_name_with_extension)[0]
             new_target_app_path = os.path.join(target_app_path, app_name)

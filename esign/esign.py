@@ -305,13 +305,18 @@ class ESigner(object):
         ori_entitlements_plist = os.path.join(ESIGN_DIR_PATH, EMBEDDED_ORI_ENTITLEMENTS)
         if os.path.exists(ori_entitlements_plist):
             os.remove(ori_entitlements_plist)
+
         EBinTool.dump_app_entitlements(self.target_app_path, ori_entitlements_plist)
+        is_dump_appent_fail = False
         if not os.path.exists(ori_entitlements_plist):
-            raise Exception("dump app entitlements fail")
-        with open(ori_entitlements_plist, 'rb') as f:
-            original_entitlements = plistlib.load(f)
-            if len(original_entitlements) == 0:
-                raise Exception("dump app entitlements fail")
+            is_dump_appent_fail = True
+            print(Logger.warning("dump app entitlements fail"))
+        else:
+            with open(ori_entitlements_plist, 'rb') as f:
+                original_entitlements = plistlib.load(f)
+                if len(original_entitlements) == 0:
+                    is_dump_appent_fail = True
+                    print(Logger.warning("dump app entitlements fail"))
 
         pro_entitlements_plist = os.path.join(ESIGN_DIR_PATH, EMBEDDED_PRO_ENTITLEMENTS)
         if os.path.exists(pro_entitlements_plist):
@@ -331,7 +336,7 @@ class ESigner(object):
         profile_plist = os.path.join(ESIGN_DIR_PATH, PROFILE_PLIST)
         if os.path.exists(profile_plist):
             os.remove(profile_plist)
-        self._merge_entitlements(ori_entitlements_plist, pro_entitlements_plist, profile_plist)
+         self._merge_entitlements(ori_entitlements_plist, pro_entitlements_plist, profile_plist, is_dump_appent_fail)
         if not os.path.exists(profile_plist):
             raise Exception("merge entitlements fail")
 
@@ -347,18 +352,21 @@ class ESigner(object):
             + "{}/embedded.mobileprovision".format(self.target_app_path)
         )
 
-    def _merge_entitlements(self, original_file, pro_file, output_file):
-        with open(original_file, 'rb') as f:
-            original_entitlements = plistlib.load(f)
+    def _merge_entitlements(self, original_file, pro_file, output_file, is_dump_appent_fail):
 
         with open(pro_file, 'rb') as f:
             pro_entitlements = plistlib.load(f)
-
-        merged_entitlements = original_entitlements.copy()
-        merged_entitlements.update(pro_entitlements)
+        if not is_dump_appent_fail:
+            with open(original_file, 'rb') as f:
+                original_entitlements = plistlib.load(f)
+            merged_entitlements = original_entitlements.copy()
+            merged_entitlements.update(pro_entitlements)
+        else:
+            merged_entitlements = pro_entitlements.copy()
 
         with open(output_file, 'wb') as f:
             plistlib.dump(merged_entitlements, f)
+
 
     def _inject_dylib(self):
         # /usr/libexec/PlistBuddy -c "Print :CFBundleName" "${INFOPLIST}"
