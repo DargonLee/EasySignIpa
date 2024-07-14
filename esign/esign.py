@@ -457,10 +457,6 @@ class ESigner(object):
         payload_app_path = os.path.join(payload_path, os.path.basename(self.target_app_path))
         print(f"[*] zip payload path: {payload_app_path}")
         print(f"[*] zip tempdir path: {self.tempdir}")
-        if os.path.exists(payload_app_path):
-            shutil.rmtree(payload_app_path)
-        shutil.copytree(self.target_app_path, payload_app_path)
-        self.after_payload_path = payload_path
         os.chdir(self.tempdir)
         stem, suffix = os.path.splitext(os.path.basename(self.app_name))
         ipa_name = f"{stem}_resign.ipa"
