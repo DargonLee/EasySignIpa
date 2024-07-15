@@ -13,7 +13,7 @@
     <option name="ADD_CONTENT_ROOTS" value="false" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="esign" />
-    <option name="PARAMETERS" value="-s $USER_HOME$/Downloads/app.ipa -o ./" />
+    <option name="PARAMETERS" value="-s $USER_HOME$/Downloads/Payload/DingTalk.app -m release -o ./" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="true" />

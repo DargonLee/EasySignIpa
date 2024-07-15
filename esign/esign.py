@@ -37,6 +37,8 @@ class ESigner(object):
         self.execute_path = None
         self.executable_name = None
 
+        self.app_extension = None
+
         self.config = EConfigHandler(SETTINGS_PATH)
 
     def check_identity(self):
@@ -101,6 +103,7 @@ class ESigner(object):
             exit(1)
 
         if app_extension == "ipa":
+            self.app_extension = "ipa"
             import tempfile
             self.tempdir = tempfile.mkdtemp()
             EZipFile.unzip_file(self.target_app_path, self.tempdir)
@@ -111,6 +114,7 @@ class ESigner(object):
             self.app_name = tmp_list[0]
             self.target_app_path = os.path.join(self.payload_path, self.app_name)
         else:
+            self.app_extension = "app"
             self.tempdir = os.path.dirname(self.target_app_path)
             payload_path = os.path.join(self.tempdir, "Payload")
             self.payload_path = payload_path
@@ -455,17 +459,29 @@ class ESigner(object):
             self.tempdir, "Payload"
         )
         payload_app_path = os.path.join(payload_path, os.path.basename(self.target_app_path))
-        print(f"[*] zip payload path: {payload_app_path}")
+        print(f"[*] zip source target_app_path path: {self.target_app_path}")
+        print(f"[*] zip destination payload path: {payload_app_path}")
         print(f"[*] zip tempdir path: {self.tempdir}")
+
+        if self.app_extension == "app":
+            if os.path.exists(payload_app_path):
+                shutil.rmtree(payload_app_path)
+            shutil.copytree(self.target_app_path, payload_app_path)
+            self.after_payload_path = payload_path
+
         os.chdir(self.tempdir)
         stem, suffix = os.path.splitext(os.path.basename(self.app_name))
         ipa_name = f"{stem}_resign.ipa"
         zip_cmd = "zip -qr {} {}".format(ipa_name, "Payload/")
         os.system(zip_cmd)
-        shutil.move(
-            os.path.join(self.tempdir, ipa_name),
-            os.path.join(self.output_dir, ipa_name),
-        )
+
+        if self.app_extension == "app":
+            shutil.rmtree(payload_app_path)
+        else:
+            shutil.move(
+                os.path.join(self.tempdir, ipa_name),
+                os.path.join(self.output_dir, ipa_name),
+            )
         os.chdir(self.current_path)
 
     def _print_app_infoplist_content(self):
