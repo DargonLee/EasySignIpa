@@ -18,11 +18,11 @@ def main():
         "-l", "--inject", help="injecting dynamic library into the app", type=str
     )
     parser.add_argument("-o", "--output", help="output the resigned ipa", type=str)
-    parser.add_argument("-m", "--build_configuration", help="debug or release default: debug", default="debug", type=str)
+    parser.add_argument("-r", "--release", help="sign release ipa", action="store_true")
 
     parser.add_argument("--bundle_id", help="modify app bundle id value", type=str)
     parser.add_argument("--bundle_name", help="modify app bundle display name", type=str)
-    parser.add_argument("--info", help="print Info.plist content", action="store_true",)
+    parser.add_argument("--info", help="print Info.plist content", action="store_true")
 
     group_install = parser.add_mutually_exclusive_group(required=False)
     group_install.add_argument(
@@ -68,7 +68,7 @@ def main():
                          args.info,
                          args.bundle_id,
                          args.bundle_name,
-                         args.build_configuration,
+                         args.release,
                          )
 
 if __name__ == "__main__":

@@ -158,7 +158,7 @@ class ESigner(object):
             is_print_info=False,
             bundle_id=None,
             bundle_name=None,
-            build_configuration='debug',
+            build_release=None,
     ):
         self.target_app_path = app_path
         self.inject_dylib_list = dylib_list
@@ -166,11 +166,11 @@ class ESigner(object):
         self.install_type = install_type
         self.bundle_id = bundle_id
         self.bundle_name = bundle_name
-        self.build_configuration = build_configuration
+        self.build_configuration = build_release
 
         # 签名模式 debug ｜ release 检测
-        build_status = build_configuration == 'debug'
-        if build_status:
+        build_status = self.build_configuration == False
+        if self.build_configuration == False:
             self.check_run_env()
         else:
             self.check_release_run_env()
