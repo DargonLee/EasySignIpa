@@ -10,9 +10,14 @@ def parse_prompt_arg(prompt_arg):
     print("prompt config:", prompt)
     return prompt
 
+def get_version():
+    return "0.9.4"
 
 def main():
     parser = argparse.ArgumentParser(description="ipa re-signature command tool")
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {get_version()}',
+        help='show version and exit'
+    )
     parser.add_argument("-s", "--sign", help="re-signing the .ipa or .app", type=str)
     parser.add_argument(
         "-l", "--inject", help="injecting dynamic library into the app", type=str
