@@ -20,22 +20,22 @@ class InstallCommand(Command):
         esign_dir_path = "/Users/" + user_name + "/.esign/"
         if not os.path.exists(esign_dir_path):
             os.makedirs(esign_dir_path)
-            shutil.copytree(
-                os.path.join(getcwd(), "config"), os.path.join(esign_dir_path, "config")
-            )
-            shutil.copytree(
-                os.path.join(getcwd(), "bin"), os.path.join(esign_dir_path, "bin")
-            )
             provisions_path = os.path.join(esign_dir_path, "provisions")
             if not os.path.exists(provisions_path):
                 os.makedirs(provisions_path)
+        shutil.copytree(
+            os.path.join(getcwd(), "config"), os.path.join(esign_dir_path, "config")
+        )
+        shutil.copytree(
+            os.path.join(getcwd(), "bin"), os.path.join(esign_dir_path, "bin")
+        )
 
 
 
 setup(
     name="esign",
     description="A command-line tool for re-signing iOS IPA files",
-    version="0.9.3",
+    version="0.9.4",
     license="MIT",
     author="Harlans",
     author_email="2461414445@qq.com",

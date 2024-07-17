@@ -12,7 +12,6 @@ from esign.eprovision import EProvision
 from esign.ezip import EZipFile
 from esign.utils import (
     SETTINGS_PATH,
-    PROVISIONS_DIR_PATH,
     ESIGN_DIR_PATH,
     PROFILE_PLIST,
     EMBEDDED_ENTITLEMENTS,
