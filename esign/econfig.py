@@ -1,5 +1,11 @@
 import configparser
 import os
+import shutil
+import subprocess
+from esign.elogger import Logger
+from esign.utils import (
+    PROVISIONS_DIR_PATH
+)
 
 class EConfigHandler(object):
     def __init__(self, path):
@@ -32,25 +38,52 @@ class EConfigHandler(object):
             self.config.write(configfile)
 
     ### debug
-    def get_identity(self):
-        return self.get(self.section_key, self.identity_key)
+    def get_debug_identity(self):
+        debug_identity = self.get(self.section_key, self.identity_key)
+        if not debug_identity:
+            subprocess.call("security find-identity -v -p codesigning", shell=True)
+            identity = input(Logger.green("Please select the [debug] identity value for the certificate: "))
+            self.set_debug_identity(identity)
+            print('[*] SetEnv [debug] identity: {} success'.format(identity))
+            return identity
+        else:
+            return debug_identity
 
-    def set_identity(self, identity):
+    def set_debug_identity(self, identity):
         self.set(self.section_key, self.identity_key, identity)
 
-    def get_mobileprovision_path(self):
+    def get_debug_mobileprovision_path(self):
         mobileprovision_path = self.get(self.section_key, self.mobileprovision_path_key)
-        return False
         if not os.path.exists(mobileprovision_path):
-            raise False
+            while True:
+                mobileprovision_path = input(
+                    Logger.green("Please provide the full path to the [debug] provisioning profile file: "))
+                if os.path.exists(mobileprovision_path):
+                    break
+                else:
+                    Logger.green("[debug] provisioning profile file path not exists")
+            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
+            mobileprovision_name = os.path.basename(mobileprovision_path)
+            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
+            self.set_debug_mobileprovision_path(mobileprovision_new_path)
+            print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_new_path}')
+            return mobileprovision_new_path
         else:
-            return True
-    def set_mobileprovision_path(self, path):
+            return mobileprovision_path
+    def set_debug_mobileprovision_path(self, path):
         self.set(self.section_key, self.mobileprovision_path_key, path)
 
     ### release
     def get_release_identity(self):
-        return self.get(self.section_release_key, self.identity_release_key)
+        release_identity = self.get(self.section_release_key, self.identity_release_key)
+        if not release_identity:
+            subprocess.call("security find-identity -v -p codesigning", shell=True)
+            identity = input(Logger.green("Please select the [release] identity value for the certificate: "))
+            self.set_release_identity(identity)
+            print('[*] SetEnv [release] identity: {} success'.format(identity))
+            return identity
+        else:
+            return release_identity
 
     def set_release_identity(self, identity):
         self.set(self.section_release_key, self.identity_release_key, identity)
@@ -58,9 +91,22 @@ class EConfigHandler(object):
     def get_release_mobileprovision_path(self):
         release_mobileprovision_path = self.get(self.section_release_key, self.mobileprovision_path_release_key)
         if not os.path.exists(release_mobileprovision_path):
-            raise False
+            while True:
+                mobileprovision_path = input(
+                    Logger.green("Please provide the full path to the [release] provisioning profile file: "))
+                if os.path.exists(mobileprovision_path):
+                    break
+                else:
+                    Logger.red("[release] provisioning profile file path not exists")
+            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
+            mobileprovision_name = os.path.basename(mobileprovision_path)
+            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
+            self.set_release_mobileprovision_path(mobileprovision_new_path)
+            print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_new_path}')
+            return mobileprovision_new_path
         else:
-            return True
+            return release_mobileprovision_path
+
 
     def set_release_mobileprovision_path(self, path):
         self.set(self.section_release_key, self.mobileprovision_path_release_key, path)
@@ -72,7 +118,7 @@ if __name__ == "__main__":
         "/Users/apple/Desktop/Github/EasySignIpa/config/settings.ini"
     )
     print(config_handler.config.sections())
-    print(config_handler.get_mobileprovision_path())
+    print(config_handler.get_debug_mobileprovision_path())
     config_handler.get("DEFAULT_SECTION", "debug")  # 读取 DEFAULT section 下的 debug option
     # config_handler.set("DEFAULTss", "debug", "False")
     # 设置 DEFAULT section 下的 debug option 为 'False'

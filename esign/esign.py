@@ -41,51 +41,14 @@ class ESigner(object):
 
         self.config = EConfigHandler(SETTINGS_PATH)
 
-    def check_identity(self):
-        if not self.config.get_identity():
-            self._execute_shell("security find-identity -v -p codesigning")
-            identity = input(Logger.green("Please select the [debug] identity value for the certificate :"))
-            self.config.set_identity(identity)
-            print('[*] SetEnv [debug] identity: {} success'.format(identity))
-
-    def check_mobileprovision(self):
-        if not self.config.get_mobileprovision_path():
-            mobileprovision_path = input(
-                Logger.green("Please provide the full path to the [debug] provisioning profile file :"))
-            if not os.path.exists(mobileprovision_path):
-                raise Exception(f"{mobileprovision_path} not exist")
-            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
-            mobileprovision_name = os.path.basename(mobileprovision_path)
-            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
-            self.config.set_mobileprovision_path(mobileprovision_new_path)
-            print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_new_path}')
-
-    def check_release_identity(self):
-        if not self.config.get_release_identity():
-            self._execute_shell("security find-identity -v -p codesigning")
-            identity = input(Logger.green("Please select the [release] identity value for the certificate :"))
-            self.config.set_release_identity(identity)
-            print('[*] SetEnv [release] identity: {} success'.format(identity))
-
-    def check_release_mobileprovision(self):
-        if not self.config.get_release_mobileprovision_path():
-            mobileprovision_path = input(
-                Logger.green("Please provide the full path to the [release] provisioning profile file :"))
-            if not os.path.exists(mobileprovision_path):
-                raise Exception(f"{mobileprovision_path} not exist")
-            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
-            mobileprovision_name = os.path.basename(mobileprovision_path)
-            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
-            self.config.set_release_mobileprovision_path(mobileprovision_new_path)
-            print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_new_path}')
 
     def check_release_run_env(self):
-        self.check_release_identity()
-        self.check_release_mobileprovision()
+        self.config.get_release_identity()
+        self.config.get_release_mobileprovision_path()
 
     def check_run_env(self):
-        self.check_identity()
-        self.check_mobileprovision()
+        self.config.get_debug_identity()
+        self.config.get_debug_mobileprovision_path()
 
     def _prepare_app_path(self):
         print(Logger.blue("👉🏻 prepare app"))
@@ -180,8 +143,8 @@ class ESigner(object):
 
 
         # 证书和描述文件
-        self.identity = self.config.get_identity() if build_status else self.config.get_release_identity()
-        self.mobileprovision_path = self.config.get_mobileprovision_path() if build_status else self.config.get_release_mobileprovision_path()
+        self.identity = self.config.get_debug_identity() if build_status else self.config.get_release_identity()
+        self.mobileprovision_path = self.config.get_debug_mobileprovision_path() if build_status else self.config.get_release_mobileprovision_path()
         if self.mobileprovision_path:
             self.provision = EProvision(self.mobileprovision_path)
             result = self.provision.contain_cer_identity(self.identity)
