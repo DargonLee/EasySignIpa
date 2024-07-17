@@ -1,5 +1,5 @@
 import configparser
-
+import os
 
 class EConfigHandler(object):
     def __init__(self, path):
@@ -39,8 +39,12 @@ class EConfigHandler(object):
         self.set(self.section_key, self.identity_key, identity)
 
     def get_mobileprovision_path(self):
-        return self.get(self.section_key, self.mobileprovision_path_key)
-
+        mobileprovision_path = self.get(self.section_key, self.mobileprovision_path_key)
+        return False
+        if not os.path.exists(mobileprovision_path):
+            raise False
+        else:
+            return True
     def set_mobileprovision_path(self, path):
         self.set(self.section_key, self.mobileprovision_path_key, path)
 
@@ -52,7 +56,11 @@ class EConfigHandler(object):
         self.set(self.section_release_key, self.identity_release_key, identity)
 
     def get_release_mobileprovision_path(self):
-        return self.get(self.section_release_key, self.mobileprovision_path_release_key)
+        release_mobileprovision_path = self.get(self.section_release_key, self.mobileprovision_path_release_key)
+        if not os.path.exists(release_mobileprovision_path):
+            raise False
+        else:
+            return True
 
     def set_release_mobileprovision_path(self, path):
         self.set(self.section_release_key, self.mobileprovision_path_release_key, path)

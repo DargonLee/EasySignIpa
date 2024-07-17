@@ -49,15 +49,16 @@ class ESigner(object):
             print('[*] SetEnv [debug] identity: {} success'.format(identity))
 
     def check_mobileprovision(self):
-        mobileprovision_path = self.config.get_mobileprovision_path()
-        if not mobileprovision_path:
+        if not self.config.get_mobileprovision_path():
             mobileprovision_path = input(
                 Logger.green("Please provide the full path to the [debug] provisioning profile file :"))
             if not os.path.exists(mobileprovision_path):
                 raise Exception(f"{mobileprovision_path} not exist")
             shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
-            self.config.set_mobileprovision_path(mobileprovision_path)
-            print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_path}')
+            mobileprovision_name = os.path.basename(mobileprovision_path)
+            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
+            self.config.set_mobileprovision_path(mobileprovision_new_path)
+            print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_new_path}')
 
     def check_release_identity(self):
         if not self.config.get_release_identity():
@@ -73,8 +74,10 @@ class ESigner(object):
             if not os.path.exists(mobileprovision_path):
                 raise Exception(f"{mobileprovision_path} not exist")
             shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
-            self.config.set_release_mobileprovision_path(mobileprovision_path)
-            print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_path}')
+            mobileprovision_name = os.path.basename(mobileprovision_path)
+            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
+            self.config.set_release_mobileprovision_path(mobileprovision_new_path)
+            print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_new_path}')
 
     def check_release_run_env(self):
         self.check_release_identity()
