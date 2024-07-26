@@ -3,9 +3,13 @@ import subprocess
 import os
 import shlex
 import platform
-from subprocess import Popen, PIPE
 from esign.elogger import Logger
-from esign.utils import IOS_DEPLOY_NEW_PATH, OPTOOL_PATH, JTOOL2_PATH
+from esign.utils import (
+    IOS_DEPLOY_NEW_PATH,
+    OPTOOL_PATH,
+    JTOOL2_PATH,
+    RESTORE_SYMBOL_PATH
+)
 
 def get_os():
     os_name = platform.system()
@@ -120,17 +124,47 @@ class EBinTool(object):
         return optool_cmd_result
 
     @staticmethod
-    def jtool2(param):
-        print(Logger.blue("👉🏻 jtool2 {}".format(param)))
+    def jtool2(params):
+        print(Logger.blue("👉🏻 jtool2 {}".format(params)))
         jtool2_cmd = (
             '{} {}'.format(
-                JTOOL2_PATH, param
+                JTOOL2_PATH, params
             )
         )
         print(Logger.blue("👉🏻 Jtool2 cmd: {}").format(jtool2_cmd))
         jtool2_cmd_result = subprocess.getoutput(jtool2_cmd)
         print("[*] Jtool2 cmd result: {}".format(jtool2_cmd_result))
         return jtool2_cmd_result
+
+    @staticmethod
+    def restore_symbol(params):
+        """
+        restore-symbol CJTest -o CJTest_symbol
+        """
+        print(Logger.blue("👉🏻 restore_symbol {}".format(params)))
+        restore_symbol_cmd = (
+            '{} {}'.format(
+                RESTORE_SYMBOL_PATH, params
+            )
+        )
+        print(Logger.blue("👉🏻 restore_symbol cmd: {}").format(restore_symbol_cmd))
+        restore_symbol_cmd_result = subprocess.getoutput(restore_symbol_cmd)
+        print("[*] restore_symbol cmd result: {}".format(restore_symbol_cmd_result))
+        return restore_symbol_cmd_result
+
+    @staticmethod
+    def atos(params):
+        """
+        atos -arch arm64 -o CJTest_arm64_symbol -l 0x1045e8000 0x0000000105b8b738 0x0000000105b8b724
+        """
+        print(Logger.blue("👉🏻 atos cmd: {}".format(params)))
+        atos_cmd = (
+            'atos -arch arm64 {}'.format(params)
+        )
+        print(Logger.blue("👉🏻 atos cmd: {}").format(atos_cmd))
+        atos_cmd_result = subprocess.getoutput(atos_cmd)
+        print("[*] atos cmd result: {}".format(atos_cmd_result))
+        return atos_cmd_result
 
 
 if __name__ == "__main__":
