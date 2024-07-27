@@ -11,6 +11,7 @@ from esign.utils import (
     RESTORE_SYMBOL_PATH
 )
 
+
 def get_os():
     os_name = platform.system()
     if os_name == "Windows":
@@ -34,6 +35,7 @@ class EBinTool(object):
                 print(output.strip())
         rc = process.poll()
         return rc
+
     @staticmethod
     def install_app(target_app_path, install_type):
         print(Logger.green("✅ install app"))

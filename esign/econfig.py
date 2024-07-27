@@ -7,6 +7,7 @@ from esign.utils import (
     PROVISIONS_DIR_PATH
 )
 
+
 class EConfigHandler(object):
     def __init__(self, path):
         self.section_key = "DEFAULTCONFIG"
@@ -70,6 +71,7 @@ class EConfigHandler(object):
             return mobileprovision_new_path
         else:
             return mobileprovision_path
+
     def set_debug_mobileprovision_path(self, path):
         self.set(self.section_key, self.mobileprovision_path_key, path)
 
@@ -106,7 +108,6 @@ class EConfigHandler(object):
             return mobileprovision_new_path
         else:
             return release_mobileprovision_path
-
 
     def set_release_mobileprovision_path(self, path):
         self.set(self.section_release_key, self.mobileprovision_path_release_key, path)

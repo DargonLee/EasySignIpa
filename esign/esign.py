@@ -22,6 +22,10 @@ from esign.utils import (
 
 class ESigner(object):
     def __init__(self):
+        self.build_configuration = None
+        self.bundle_name = None
+        self.bundle_id = None
+        self.output_dir = None
         self.install_type = None
         self.inject_dylib_list = None
         self.target_app_path = None
@@ -39,7 +43,6 @@ class ESigner(object):
         self.app_extension = None
 
         self.config = EConfigHandler(SETTINGS_PATH)
-
 
     def check_release_run_env(self):
         self.config.get_release_identity()
@@ -113,9 +116,8 @@ class ESigner(object):
     def _check_resign_env(self):
         if not os.path.exists(self.info_plist_file_path):
             raise Exception(f"{self.app_name} Info.plist not exist")
-        if EBinTool.otool_macho_cryptid(self.execute_path) == True:
+        if EBinTool.otool_macho_cryptid(self.execute_path):
             raise Exception(f"{self.execute_path} is encryption")
-
 
     def resign(
             self,
@@ -138,11 +140,10 @@ class ESigner(object):
 
         # 签名模式 debug ｜ release 检测
         build_status = self.build_configuration == False
-        if self.build_configuration == False:
+        if not self.build_configuration:
             self.check_run_env()
         else:
             self.check_release_run_env()
-
 
         # 证书和描述文件
         self.identity = self.config.get_debug_identity() if build_status else self.config.get_release_identity()
@@ -152,7 +153,6 @@ class ESigner(object):
             result = self.provision.contain_cer_identity(self.identity)
             print(f'[*] SetEnv EProvision result: {result}')
 
-
         # app 签名准备
         self._prepare_app_path()
         print(Logger.green("✅ resign info"))
@@ -161,7 +161,7 @@ class ESigner(object):
         # 检测重签环境
         self._check_resign_env()
 
-        #资源处理
+        # 资源处理
         self._prepare_recourse()
 
         # 处理 Info.plist
@@ -338,7 +338,6 @@ class ESigner(object):
 
         with open(output_file, 'wb') as f:
             plistlib.dump(merged_entitlements, f)
-
 
     def _inject_dylib(self):
         # /usr/libexec/PlistBuddy -c "Print :CFBundleName" "${INFOPLIST}"
