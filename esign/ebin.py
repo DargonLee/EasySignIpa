@@ -166,6 +166,33 @@ class EBinTool(object):
         print("[*] atos cmd result: {}".format(atos_cmd_result))
         return atos_cmd_result
 
+    @staticmethod
+    def otool(params):
+        """
+        otool
+        """
+        otool_cmd = (
+            'otool {}'.format(params)
+        )
+        print(Logger.blue("👉🏻 otool cmd: {}").format(otool_cmd))
+        otool_cmd_result = subprocess.getoutput(otool_cmd)
+        print("[*] otool cmd result: {}".format(otool_cmd_result))
+        return otool_cmd_result
+
+    @staticmethod
+    def otool_macho_cryptid(macho_path):
+        """
+        otool -l WeChart | grep cryptid
+        """
+        otool_cmd = (
+            '-l {} | grep cryptid'.format(macho_path)
+        )
+        otool_cmd_result = EBinTool.otool(otool_cmd)
+        is_crypt = True
+        if "cryptid 0" in otool_cmd_result:
+            is_crypt = False
+        return is_crypt
+
 
 if __name__ == "__main__":
     # EBinTool.optool_inject(
@@ -176,4 +203,5 @@ if __name__ == "__main__":
     #     "/Users/apple/Downloads/Payload/libMacBox.dylib",
     #     " /Users/apple/Downloads/Payload/sacurity.app/sacurity",
     # )
-    EBinTool.install_app("/Users/apple/Downloads/Payload/Lark.app", "b")
+    # EBinTool.install_app("/Users/apple/Downloads/Payload/Lark.app", "b")
+    EBinTool.otool_macho_cryptid("/Users/apple/Downloads/Payload/WeChat.app/WeChat")

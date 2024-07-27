@@ -113,6 +113,9 @@ class ESigner(object):
     def _check_resign_env(self):
         if not os.path.exists(self.info_plist_file_path):
             raise Exception(f"{self.app_name} Info.plist not exist")
+        if EBinTool.otool_macho_cryptid(self.execute_path) == True:
+            raise Exception(f"{self.execute_path} is encryption")
+
 
     def resign(
             self,
@@ -159,7 +162,7 @@ class ESigner(object):
         self._check_resign_env()
 
         #资源处理
-        # self._prepare_recourse()
+        self._prepare_recourse()
 
         # 处理 Info.plist
         self._prepare_info_plist()
