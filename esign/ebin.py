@@ -67,29 +67,31 @@ class EBinTool(object):
         dump_app_cmd = "codesign -d --entitlements :- {} > {}".format(target_app_path, entitlements_file)
         dump_app_cmd_result = subprocess.getoutput(dump_app_cmd)
 
-        is_dump_success = False
-        if os.path.exists(entitlements_file):
-            with open(entitlements_file, 'rb') as f:
-                plist_data = plistlib.load(f)
-                if len(plist_data) > 0:
-                    is_dump_success = True
+        is_dump_success = True
+        if "an invalid entitlements" in dump_app_cmd_result:
+            os.remove(entitlements_file)
+            is_dump_success = False
 
-        if is_dump_success:
-            print(Logger.blue("[*] Use Codesign Dump app entitlements"))
-        else:
+        if not is_dump_success:
             print(Logger.blue("[*] Use Jtool2 Dump app entitlements"))
-
-        if not is_dump_success and "warning" in dump_app_cmd_result:
             app_name_with_extension = os.path.basename(target_app_path)
             app_name = os.path.splitext(app_name_with_extension)[0]
             new_target_app_path = os.path.join(target_app_path, app_name)
             jtool2_cmd = "{} --ent {} > {}".format(
                 JTOOL2_PATH, new_target_app_path, entitlements_file
             )
-            print(f"[*] {jtool2_cmd}")
+            print(f"[*] jtool2 cmd: {jtool2_cmd}")
             jtool2_cmd_result = subprocess.getoutput(jtool2_cmd)
             print("[*] jtool2_cmd result: {}".format(jtool2_cmd_result))
         print("[*] Dump app result {}".format(dump_app_cmd_result))
+        try:
+            if os.path.exists(entitlements_file):
+                with open(entitlements_file, 'rb') as f:
+                    plist_data = plistlib.load(f)
+                    if len(plist_data) > 0:
+                        print("[*] Dump app entitlements success")
+        except Exception as e:
+            print(f"[!] Failed to dump app entitlements: {e}")
 
     @staticmethod
     def codesign_dylib(dylib_framework_path, identity):
