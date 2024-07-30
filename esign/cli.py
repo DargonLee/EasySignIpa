@@ -1,6 +1,7 @@
 import sys
 import argparse
 from esign.esign import ESigner
+from esign.eupdate import EUpdate
 import os
 
 
@@ -31,6 +32,18 @@ def main():
     parser.add_argument("--bundle_name", help="modify app bundle display name", type=str)
     parser.add_argument("--info", help="print Info.plist content", action="store_true")
 
+    update_subparsers = parser.add_subparsers(dest="command")
+    update_provision_parser = update_subparsers.add_parser('update', help='update resign mobileprovision')
+    group_update = update_provision_parser.add_mutually_exclusive_group(required=False)
+    group_update.add_argument("-p", "--profile_path",
+                        help="please provide the path to the mobileprovision file",
+                        type=str)
+    group_update.add_argument("-i", "--identity_value", help="please provide the identity value",
+                        type=str)
+    update_provision_parser.add_argument("-m", "--update_model",
+                               help="debug or release mobileprovision file",
+                               type=str, default="debug")
+
     group_install = parser.add_mutually_exclusive_group(required=False)
     group_install.add_argument(
         "-b",
@@ -49,6 +62,14 @@ def main():
 
     if len(sys.argv) == 1:
         parser.print_help()
+
+    if args.command == "update":
+        if args.profile_path:
+            profile_path = os.path.abspath(args.profile_path)
+            EUpdate.update_mobileprovision(profile_path, args.update_model)
+        elif args.identity_value:
+            identity_value = args.update_identity
+            EUpdate.update_identity(identity_value, args.update_model)
 
     install_type = None
     if args.install:

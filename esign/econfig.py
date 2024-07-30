@@ -12,7 +12,7 @@ class EConfigHandler(object):
     def __init__(self, path):
         self.section_key = "DEFAULTCONFIG"
         self.identity_key = "codesign_identity_value"
-        self.mobileprovision_path_key = "embedded_mobileprovision_path"
+        self.mobileprovision_path_debug_key = "embedded_mobileprovision_path"
 
         self.section_release_key = "RDEFAULTCONFIG"
         self.identity_release_key = "codesign_identity_value_release"
@@ -54,7 +54,7 @@ class EConfigHandler(object):
         self.set(self.section_key, self.identity_key, identity)
 
     def get_debug_mobileprovision_path(self):
-        mobileprovision_path = self.get(self.section_key, self.mobileprovision_path_key)
+        mobileprovision_path = self.get(self.section_key, self.mobileprovision_path_debug_key)
         if not os.path.exists(mobileprovision_path):
             while True:
                 mobileprovision_path = input(
@@ -63,17 +63,17 @@ class EConfigHandler(object):
                     break
                 else:
                     Logger.green("[debug] provisioning profile file path not exists")
-            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
-            mobileprovision_name = os.path.basename(mobileprovision_path)
-            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
-            self.set_debug_mobileprovision_path(mobileprovision_new_path)
-            print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_new_path}')
-            return mobileprovision_new_path
+            return self.set_debug_mobileprovision_path(mobileprovision_path)
         else:
             return mobileprovision_path
 
-    def set_debug_mobileprovision_path(self, path):
-        self.set(self.section_key, self.mobileprovision_path_key, path)
+    def set_debug_mobileprovision_path(self, mobileprovision_path):
+        shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
+        mobileprovision_name = os.path.basename(mobileprovision_path)
+        mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
+        self.set(self.section_key, self.mobileprovision_path_debug_key, mobileprovision_new_path)
+        print(f'[*] SetEnv [debug] mobileprovision file success: {mobileprovision_new_path}')
+        return mobileprovision_new_path
 
     ### release
     def get_release_identity(self):
@@ -100,17 +100,17 @@ class EConfigHandler(object):
                     break
                 else:
                     Logger.red("[release] provisioning profile file path not exists")
-            shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
-            mobileprovision_name = os.path.basename(mobileprovision_path)
-            mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
-            self.set_release_mobileprovision_path(mobileprovision_new_path)
-            print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_new_path}')
-            return mobileprovision_new_path
+            return self.set_release_mobileprovision_path(mobileprovision_path)
         else:
             return release_mobileprovision_path
 
-    def set_release_mobileprovision_path(self, path):
-        self.set(self.section_release_key, self.mobileprovision_path_release_key, path)
+    def set_release_mobileprovision_path(self, mobileprovision_path):
+        shutil.copy(mobileprovision_path, PROVISIONS_DIR_PATH)
+        mobileprovision_name = os.path.basename(mobileprovision_path)
+        mobileprovision_new_path = os.path.join(PROVISIONS_DIR_PATH, mobileprovision_name)
+        self.set(self.section_release_key, self.mobileprovision_path_release_key, mobileprovision_new_path)
+        print(f'[*] SetEnv [release] mobileprovision file success: {mobileprovision_new_path}')
+        return mobileprovision_new_path
 
 
 if __name__ == "__main__":
