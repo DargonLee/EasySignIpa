@@ -26,6 +26,8 @@ class ESigner(object):
         self.bundle_name = None
         self.bundle_id = None
         self.output_dir = None
+        self.plugins_dir = None
+        self.extensions_dir = None
         self.install_type = None
         self.inject_dylib_list = None
         self.target_app_path = None
@@ -94,6 +96,7 @@ class ESigner(object):
         self.info_plist_file_path = os.path.join(self.target_app_path, "Info.plist")
         self.frameworks_dir = os.path.join(self.target_app_path, "Frameworks")
         self.plugins_dir = os.path.join(self.target_app_path, "PlugIns")
+        self.extensions_dir = os.path.join(self.target_app_path, "Extensions")
         self.sc_info_dir = os.path.join(self.target_app_path, "SC_Info")
         self.watch_dir = os.path.join(self.target_app_path, "Watch")
         self.ds_store = os.path.join(self.payload_path, ".DS_Store")
@@ -203,6 +206,11 @@ class ESigner(object):
         self._clean_tmp_files()
 
     def _prepare_recourse(self):
+
+        # 删除 - Extensions
+        if os.path.exists(self.extensions_dir):
+            shutil.rmtree(self.extensions_dir)
+
         # 删除 - plugins
         if os.path.exists(self.plugins_dir):
             shutil.rmtree(self.plugins_dir)

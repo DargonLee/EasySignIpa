@@ -13,7 +13,7 @@ def parse_prompt_arg(prompt_arg):
 
 
 def get_version():
-    return "0.9.4"
+    return "0.9.5"
 
 
 def main():
