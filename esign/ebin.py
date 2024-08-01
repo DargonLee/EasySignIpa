@@ -37,13 +37,18 @@ class EBinTool(object):
         return rc
 
     @staticmethod
-    def install_app(target_app_path, install_type):
+    def install_app(target_app_path, install_type, device_id):
         print(Logger.green("✅ install app"))
         print("[*] Install AppPath: {}".format(target_app_path))
-        install_cmd = "{} -{} {} -W".format(
-            IOS_DEPLOY_NEW_PATH, install_type, target_app_path
-        )
-        # print(f"[*] {install_cmd}")
+        if device_id:
+            install_cmd = "{} -{} {} -i {} -W".format(
+                IOS_DEPLOY_NEW_PATH, install_type,target_app_path,device_id
+            )
+        else:
+            install_cmd = "{} -{} {} -W".format(
+                IOS_DEPLOY_NEW_PATH, install_type, target_app_path
+            )
+        print(f"[*] {install_cmd}")
         # install_cmd_result = subprocess.getoutput(install_cmd)
         return_code = EBinTool.run_sub_command(install_cmd)
         print("[Done] install_cmd done with result code {}".format(return_code))

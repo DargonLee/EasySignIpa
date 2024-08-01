@@ -30,6 +30,7 @@ def main():
 
     parser.add_argument("--bundle_id", help="modify app bundle id value", type=str)
     parser.add_argument("--bundle_name", help="modify app bundle display name", type=str)
+    parser.add_argument("--device_id", help="designated device installation", type=str)
     parser.add_argument("--info", help="print Info.plist content", action="store_true")
 
     update_subparsers = parser.add_subparsers(dest="command")
@@ -97,6 +98,7 @@ def main():
                          args.bundle_id,
                          args.bundle_name,
                          args.release,
+                         args.device_id
                          )
 
 

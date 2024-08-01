@@ -132,6 +132,7 @@ class ESigner(object):
             bundle_id=None,
             bundle_name=None,
             build_release=None,
+            device_id=None
     ):
         self.target_app_path = app_path
         self.inject_dylib_list = dylib_list
@@ -140,6 +141,7 @@ class ESigner(object):
         self.bundle_id = bundle_id
         self.bundle_name = bundle_name
         self.build_configuration = build_release
+        self.device_id = device_id
 
         # 签名模式 debug ｜ release 检测
         build_status = self.build_configuration == False
@@ -196,7 +198,7 @@ class ESigner(object):
 
         # 安装 - app
         if self.install_type:
-            EBinTool.install_app(self.target_app_path, install_type)
+            EBinTool.install_app(self.target_app_path, install_type, self.device_id)
 
         # 打印Info.plist文件所有内容
         if is_print_info:
