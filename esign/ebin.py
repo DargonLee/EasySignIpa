@@ -150,15 +150,24 @@ class EBinTool(object):
         """
         restore-symbol CJTest -o CJTest_symbol
         """
-        print(Logger.blue("👉🏻 restore_symbol {}".format(params)))
+        file_re = os.path.basename(params)
+        print(Logger.blue("👉🏻 restore_symbol {}".format(file_re)))
+        tmp_path = '{}_1'.format(params)
         restore_symbol_cmd = (
-            '{} {}'.format(
-                RESTORE_SYMBOL_PATH, params
+            '{} {} -o {}'.format(
+                RESTORE_SYMBOL_PATH, params, tmp_path
             )
         )
         print(Logger.blue("👉🏻 restore_symbol cmd: {}").format(restore_symbol_cmd))
         restore_symbol_cmd_result = subprocess.getoutput(restore_symbol_cmd)
-        print("[*] restore_symbol cmd result: {}".format(restore_symbol_cmd_result))
+        if "Finish" in restore_symbol_cmd_result:
+            os.remove(params)
+            os.rename(tmp_path, params)
+            print("[*] {} restore_symbol success".format(file_re))
+        else:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            print("[*] {} restore_symbol fail: {}".format(file_re, restore_symbol_cmd_result))
         return restore_symbol_cmd_result
 
     @staticmethod

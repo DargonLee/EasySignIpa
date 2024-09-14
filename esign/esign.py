@@ -132,7 +132,8 @@ class ESigner(object):
             bundle_id=None,
             bundle_name=None,
             build_release=None,
-            device_id=None
+            device_id=None,
+            symbol=None
     ):
         self.target_app_path = app_path
         self.inject_dylib_list = dylib_list
@@ -142,6 +143,7 @@ class ESigner(object):
         self.bundle_name = bundle_name
         self.build_configuration = build_release
         self.device_id = device_id
+        self.restore_symbol = symbol
 
         # 签名模式 debug ｜ release 检测
         build_status = self.build_configuration == False
@@ -187,6 +189,8 @@ class ESigner(object):
             self._pre_codesign_dylib()
 
         # 签名 - app
+        if self.restore_symbol:
+            EBinTool.restore_symbol(self.execute_path)
         EBinTool.codesign_app(self.target_app_path, self.entitlements_file, self.identity)
 
         # 压缩成ipa
@@ -415,6 +419,8 @@ class ESigner(object):
             framework_mach_o_path = (
                     self.frameworks_dir + os.sep + framework + os.sep + framework_mach_o
             )
+            if self.restore_symbol:
+                EBinTool.restore_symbol(framework_mach_o_path)
             EBinTool.codesign_dylib(framework_mach_o_path, self.identity)
 
     def _pre_codesign_plugins(self):
@@ -428,6 +434,8 @@ class ESigner(object):
             plugin_mach_o_path = (
                     self.plugins_dir + os.sep + plugin + os.sep + plugin_mach_o
             )
+            if self.restore_symbol:
+                EBinTool.restore_symbol(plugin_mach_o_path)
             EBinTool.codesign_dylib(plugin_mach_o_path, self.identity)
 
     def _zip_app(self):
