@@ -1,4 +1,5 @@
 import plistlib
+import struct
 import subprocess
 import os
 import shlex
@@ -210,6 +211,83 @@ class EBinTool(object):
         if "cryptid 0" in otool_cmd_result:
             is_crypt = False
         return is_crypt
+    
+    @staticmethod
+    def is_encrypted_by_otool(executable_path):
+        """
+        检查可执行文件是否加密
+        
+        参数:
+        executable_path: 可执行文件的路径
+        
+        返回:
+        bool: 如果文件加密返回True,否则返回False
+        """
+        print(Logger.blue(f"👉🏻 检查文件是否加密: {executable_path}"))
+        
+        otool_cmd = f"-l {executable_path} | grep cryptid"
+        otool_result = EBinTool.otool(otool_cmd)
+        
+        if "cryptid 1" in otool_result:
+            print(Logger.yellow(f"⚠️ 文件已加密: {executable_path}"))
+            return True
+        elif "cryptid 0" in otool_result:
+            print(Logger.green(f"✅ 文件未加密: {executable_path}"))
+            return False
+        else:
+            print(Logger.error(f"错误: 无法确定文件加密状态: {executable_path}"))
+            return False
+        
+    @staticmethod
+    def is_encrypted_by_macho(file_path):
+        """
+        检测 iOS 可执行文件是否加密
+
+        参数:
+        file_path (str): 可执行文件的路径
+
+        返回:
+        bool: 如果文件加密返回 True，否则返回 False
+        """
+        try:
+            if not os.path.exists(file_path):
+                print(f"错误: 文件不存在 - {file_path}")
+                return None
+
+            with open(file_path, 'rb') as f:
+                # 读取 Mach-O 头部
+                magic = struct.unpack('<I', f.read(4))[0]
+                
+                # 检查是否为有效的 Mach-O 文件
+                if magic not in (0xfeedface, 0xfeedfacf, 0xcefaedfe, 0xcffaedfe):
+                    print(f"错误: 不是有效的 Mach-O 文件 - {file_path}")
+                    return None
+
+                # 定位到 LC_ENCRYPTION_INFO 或 LC_ENCRYPTION_INFO_64 加载命令
+                f.seek(28 if magic in (0xfeedface, 0xcefaedfe) else 32)  # 跳过头部
+                ncmds = struct.unpack('<I', f.read(4))[0]  # 加载命令数量
+
+                for _ in range(ncmds):
+                    cmd, cmdsize = struct.unpack('<II', f.read(8))
+                    if cmd in (0x21, 0x2C):  # LC_ENCRYPTION_INFO 或 LC_ENCRYPTION_INFO_64
+                        f.seek(8, 1)  # 跳过 offset 和 size
+                        cryptid = struct.unpack('<I', f.read(4))[0]
+                        
+                        if cryptid == 1:
+                            print(f"文件已加密: {file_path}")
+                            return True
+                        elif cryptid == 0:
+                            print(f"文件未加密: {file_path}")
+                            return False
+                    else:
+                        f.seek(cmdsize - 8, 1)  # 跳到下一个加载命令
+
+                print(f"未找到加密信息: {file_path}")
+                return False
+
+        except Exception as e:
+            print(f"分析过程中发生错误: {str(e)}")
+            return None
 
 
 if __name__ == "__main__":

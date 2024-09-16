@@ -54,6 +54,28 @@ class ESigner(object):
         self.config.get_debug_identity()
         self.config.get_debug_mobileprovision_path()
 
+    def _check_encryption(self):
+        print(Logger.blue("👉🏻 检查应用和插件加密状态"))
+        
+        # 检查主应用可执行文件
+        executable_path = os.path.join(self.target_app_path, self.executable_name)
+        if EBinTool.is_encrypted_by_otool(executable_path):
+            raise Exception(Logger.error("错误: 主应用可执行文件已加密,无法重签名"))
+        
+        # 检查插件
+        if os.path.exists(self.plugins_dir):
+            for plugin in os.listdir(self.plugins_dir):
+                plugin_path = os.path.join(self.plugins_dir, plugin)
+                if os.path.isdir(plugin_path):
+                    plugin_executable = os.path.splitext(plugin)[0]
+                    plugin_executable_path = os.path.join(plugin_path, plugin_executable)
+                    if os.path.exists(plugin_executable_path):
+                        if EBinTool.is_encrypted_by_otool(plugin_executable_path):
+                            print(Logger.warning(f"警告: 插件 {plugin} 已加密,将被删除"))
+                            shutil.rmtree(plugin_path)
+        
+        print(Logger.green("✅ 加密检查完成"))
+
     def _prepare_app_path(self):
         print(Logger.blue("👉🏻 prepare app"))
 
@@ -119,8 +141,8 @@ class ESigner(object):
     def _check_resign_env(self):
         if not os.path.exists(self.info_plist_file_path):
             raise Exception(f"{self.app_name} Info.plist not exist")
-        if EBinTool.otool_macho_cryptid(self.execute_path):
-            raise Exception(f"{self.execute_path} is encryption")
+        # 检查应用和插件是否加密
+        self._check_encryption()
 
     def resign(
             self,
@@ -151,6 +173,9 @@ class ESigner(object):
             self.check_run_env()
         else:
             self.check_release_run_env()
+        
+        # 检测重签环境
+        self._check_resign_env()
 
         # 证书和描述文件
         self.identity = self.config.get_debug_identity() if build_status else self.config.get_release_identity()
@@ -164,9 +189,6 @@ class ESigner(object):
         self._prepare_app_path()
         print(Logger.green("✅ resign info"))
         print("[*] AppName: {}".format(self.app_name))
-
-        # 检测重签环境
-        self._check_resign_env()
 
         # 资源处理
         self._prepare_recourse()
@@ -261,14 +283,57 @@ class ESigner(object):
         print("[-]origin bundle display name => {}".format(self.ori_bundle_name))
 
         if self.bundle_id:
-            subprocess.getoutput(
-                f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {self.bundle_id}" "{self.info_plist_file_path}"')
-            print("[-]new bundle id => {}".format(self.bundle_id))
-
+            self._modify_bundle_identifiers()
+            
         if self.bundle_name:
             subprocess.getoutput(
                 f'/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName {self.bundle_name}" "{self.info_plist_file_path}"')
             print("[-]new bundle display name is => {}".format(self.bundle_name))
+
+    def _modify_bundle_identifiers(self):
+        print(Logger.blue("👉🏻 修改主应用和插件的包名"))
+        
+        # 修改主应用的包名
+        main_bundle_id = self.bundle_id
+        subprocess.getoutput(
+                f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {main_bundle_id}" "{self.info_plist_file_path}"')
+        print("[-]new bundle id => {}".format(main_bundle_id))
+        print(f"[-]主应用包名 => {main_bundle_id}")
+        
+        # 获取插件目录
+        plugins_dir = self.plugins_dir
+        if not os.path.exists(plugins_dir):
+            print("[-]没有发现插件目录")
+            return
+        
+        # 遍历插件目录
+        for plugin in os.listdir(plugins_dir):
+            plugin_path = os.path.join(plugins_dir, plugin)
+            if not plugin_path.endswith('.appex'):
+                continue
+            
+            plugin_info_plist = os.path.join(plugin_path, "Info.plist")
+            if not os.path.exists(plugin_info_plist):
+                print(f"[-]插件 {plugin} 的 Info.plist 不存在")
+                continue
+            
+            # 获取插件原始包名
+            ori_plugin_bundle_id = subprocess.getoutput(
+                f'/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "{plugin_info_plist}"'
+            ).strip()
+
+            # 获取插件原始包名的最后一个部分
+            plugin_suffix = ori_plugin_bundle_id.split('.')[-1]
+            print(f"[-]插件 {plugin} 的后缀: {plugin_suffix}")
+
+            # 构造新的插件包名
+            new_plugin_bundle_id = f"{main_bundle_id}.{plugin_suffix}"
+            
+            # 修改插件包名
+            subprocess.getoutput(
+                f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {new_plugin_bundle_id}" "{plugin_info_plist}"'
+            )
+            print(f"[-]插件 {plugin} 包名已修改: {ori_plugin_bundle_id} => {new_plugin_bundle_id}")
 
     def _prepare_mach_o(self):
         EBinTool.optool_delete_unrestrict(self.execute_path)
@@ -431,9 +496,7 @@ class ESigner(object):
             break
         for plugin in plugins:
             plugin_mach_o = os.path.splitext(plugin)[0]
-            plugin_mach_o_path = (
-                    self.plugins_dir + os.sep + plugin + os.sep + plugin_mach_o
-            )
+            plugin_mach_o_path = os.path.join(self.plugins_dir, plugin, plugin_mach_o)
             if self.restore_symbol:
                 EBinTool.restore_symbol(plugin_mach_o_path)
             EBinTool.codesign_dylib(plugin_mach_o_path, self.identity)
