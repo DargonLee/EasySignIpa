@@ -55,12 +55,13 @@ class ESigner(object):
         self.config.get_debug_mobileprovision_path()
 
     def _check_encryption(self):
-        print(Logger.blue("👉🏻 检查应用和插件加密状态"))
+        print(Logger.blue("👉🏻 Checking encryption status of app and plugins"))
+
         
         # 检查主应用可执行文件
         executable_path = os.path.join(self.target_app_path, self.executable_name)
         if EBinTool.is_encrypted_by_otool(executable_path):
-            raise Exception(Logger.error("错误: 主应用可执行文件已加密,无法重签名"))
+            raise Exception(Logger.error("Error: Main app executable is encrypted, cannot resign"))
         
         # 检查插件
         if os.path.exists(self.plugins_dir):
@@ -71,10 +72,10 @@ class ESigner(object):
                     plugin_executable_path = os.path.join(plugin_path, plugin_executable)
                     if os.path.exists(plugin_executable_path):
                         if EBinTool.is_encrypted_by_otool(plugin_executable_path):
-                            print(Logger.warning(f"警告: 插件 {plugin} 已加密,将被删除"))
+                            print(Logger.warning(f"Warning: Plugin {plugin} is encrypted, will be removed"))
                             shutil.rmtree(plugin_path)
         
-        print(Logger.green("✅ 加密检查完成"))
+        print(Logger.green("✅ Encryption check completed"))
 
     def _prepare_app_path(self):
         print(Logger.blue("👉🏻 prepare app"))
@@ -210,6 +211,14 @@ class ESigner(object):
         if os.path.exists(self.frameworks_dir):
             self._pre_codesign_dylib()
 
+        # 签名 - plugins
+        if os.path.exists(self.plugins_dir):
+            self._pre_codesign_plugins()
+
+        # 签名 - extensions
+        if os.path.exists(self.extensions_dir):
+            self._pre_codesign_extensions()
+
         # 签名 - app
         if self.restore_symbol:
             EBinTool.restore_symbol(self.execute_path)
@@ -291,49 +300,48 @@ class ESigner(object):
             print("[-]new bundle display name is => {}".format(self.bundle_name))
 
     def _modify_bundle_identifiers(self):
-        print(Logger.blue("👉🏻 修改主应用和插件的包名"))
+        print(Logger.blue("👉🏻 Modifying bundle identifiers for main app, plugins and extensions"))
         
         # 修改主应用的包名
         main_bundle_id = self.bundle_id
         subprocess.getoutput(
                 f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {main_bundle_id}" "{self.info_plist_file_path}"')
-        print("[-]new bundle id => {}".format(main_bundle_id))
-        print(f"[-]主应用包名 => {main_bundle_id}")
+        print("[-]New main app bundle ID => {}".format(main_bundle_id))
         
-        # 获取插件目录
-        plugins_dir = self.plugins_dir
-        if not os.path.exists(plugins_dir):
-            print("[-]没有发现插件目录")
-            return
-        
-        # 遍历插件目录
-        for plugin in os.listdir(plugins_dir):
-            plugin_path = os.path.join(plugins_dir, plugin)
-            if not plugin_path.endswith('.appex'):
+        # 处理插件和扩展
+        for directory in [self.plugins_dir, self.extensions_dir]:
+            if not os.path.exists(directory):
+                print(f"[-]No {os.path.basename(directory)} directory found")
                 continue
             
-            plugin_info_plist = os.path.join(plugin_path, "Info.plist")
-            if not os.path.exists(plugin_info_plist):
-                print(f"[-]插件 {plugin} 的 Info.plist 不存在")
-                continue
-            
-            # 获取插件原始包名
-            ori_plugin_bundle_id = subprocess.getoutput(
-                f'/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "{plugin_info_plist}"'
-            ).strip()
+            # 遍历目录
+            for item in os.listdir(directory):
+                item_path = os.path.join(directory, item)
+                if not item_path.endswith('.appex'):
+                    continue
+                
+                item_info_plist = os.path.join(item_path, "Info.plist")
+                if not os.path.exists(item_info_plist):
+                    print(f"[-]Info.plist for {item} does not exist")
+                    continue
+                
+                # 获取原始包名
+                ori_item_bundle_id = subprocess.getoutput(
+                    f'/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "{item_info_plist}"'
+                ).strip()
 
-            # 获取插件原始包名的最后一个部分
-            plugin_suffix = ori_plugin_bundle_id.split('.')[-1]
-            print(f"[-]插件 {plugin} 的后缀: {plugin_suffix}")
+                # 获取原始包名的最后一个部分
+                item_suffix = ori_item_bundle_id.split('.')[-1]
+                print(f"[-]Suffix for {item}: {item_suffix}")
 
-            # 构造新的插件包名
-            new_plugin_bundle_id = f"{main_bundle_id}.{plugin_suffix}"
-            
-            # 修改插件包名
-            subprocess.getoutput(
-                f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {new_plugin_bundle_id}" "{plugin_info_plist}"'
-            )
-            print(f"[-]插件 {plugin} 包名已修改: {ori_plugin_bundle_id} => {new_plugin_bundle_id}")
+                # 构造新的包名
+                new_item_bundle_id = f"{main_bundle_id}.{item_suffix}"
+                
+                # 修改包名
+                subprocess.getoutput(
+                    f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {new_item_bundle_id}" "{item_info_plist}"'
+                )
+                print(f"[-]Bundle ID for {item} modified: {ori_item_bundle_id} => {new_item_bundle_id}")
 
     def _prepare_mach_o(self):
         EBinTool.optool_delete_unrestrict(self.execute_path)
@@ -500,6 +508,44 @@ class ESigner(object):
             if self.restore_symbol:
                 EBinTool.restore_symbol(plugin_mach_o_path)
             EBinTool.codesign_dylib(plugin_mach_o_path, self.identity)
+
+    def _pre_codesign_extensions(self):
+        print(Logger.green("✅ Starting to sign Extensions"))
+        if not os.path.exists(self.extensions_dir):
+            print(Logger.yellow("⚠️ Extensions directory does not exist, skipping signing"))
+            return
+        
+        extensions = []
+        for root, dirs, files in os.walk(self.extensions_dir):
+            extensions = dirs
+            break
+        
+        for extension in extensions:
+            extension_path = os.path.join(self.extensions_dir, extension)
+            extension_info_plist = os.path.join(extension_path, "Info.plist")
+            
+            if not os.path.exists(extension_info_plist):
+                print(Logger.yellow(f"⚠️ Info.plist for {extension} does not exist, skipping signing"))
+                continue
+            
+            executable_name = subprocess.getoutput(
+                f'/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "{extension_info_plist}"'
+            )
+            extension_executable_path = os.path.join(extension_path, executable_name)
+            
+            if not os.path.exists(extension_executable_path):
+                print(Logger.yellow(f"⚠️ Executable for {extension} does not exist, skipping signing"))
+                continue
+            
+            print(Logger.blue(f"👉🏻 Signing Extension: {extension}"))
+            
+            if self.restore_symbol:
+                EBinTool.restore_symbol(extension_executable_path)
+            
+            EBinTool.codesign_dylib(extension_executable_path, self.identity)
+            print(Logger.green(f"✅ Signing completed for {extension}"))
+        
+        print(Logger.green("✅ All Extensions signed"))
 
     def _zip_app(self):
         print(Logger.green("✅ zip app to ipa"))
