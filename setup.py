@@ -15,7 +15,6 @@ class InstallCommand(Command):
 
     def run(self):
         import getpass, os, shutil
-
         user_name = getpass.getuser()
         esign_dir_path = "/Users/" + user_name + "/.esign/"
         if not os.path.exists(esign_dir_path):
@@ -24,12 +23,8 @@ class InstallCommand(Command):
             if not os.path.exists(provisions_path):
                 os.makedirs(provisions_path)
         shutil.copytree(
-            os.path.join(getcwd(), "config"), os.path.join(esign_dir_path, "config")
-        )
-        shutil.copytree(
             os.path.join(getcwd(), "bin"), os.path.join(esign_dir_path, "bin")
         )
-
 
 
 setup(

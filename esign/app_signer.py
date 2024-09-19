@@ -62,7 +62,7 @@ class AppSigner:
             await self.code_signer.sign_all(prepared_app_path, identity, entitlements_path)
             
             if options.get('output_path'):
-                await self.ipa_packager.package(payload_path, options['output_path'])
+                await self.ipa_packager.package(executable_name, payload_path, options['output_path'])
 
             if options.get('print_info'):
                 app_info_printer.print_info_plist_content()

@@ -44,7 +44,7 @@ class ConfigHandler:
                 'jtool2': os.path.expanduser("~/.esign/bin/jtool2"),
                 'restore_symbol': os.path.expanduser("~/.esign/bin/restore-symbol"),
                 'ideviceinstaller': os.path.expanduser("~/.esign/bin/ideviceinstaller"),
-                'unsign': os.path.expanduser("~/.esign/bin/unsign"),
+                'unsign': os.path.expanduser("~/.esign/bin/unsign")
             }
         }
 

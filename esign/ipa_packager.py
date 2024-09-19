@@ -10,9 +10,14 @@ class IPAPackager:
         self.config = config
         self.logger = Logger()
 
-    async def package(self, payload_path: str, output_path: str):
+    async def package(self, executable_name: str, payload_path: str, output_path: str):
         self.logger.info("Starting packaging process")
         try:
+            output_path = os.path.abspath(output_path)
+            if not output_path.endswith('.ipa'):
+                output_path = os.path.join(output_path, executable_name + "_signed.ipa")
+            if os.path.exists(output_path):
+                os.remove(output_path)
             await self._create_ipa(payload_path, output_path)
             self.logger.default(f"IPA successfully packaged: {output_path}")
         except FileNotFoundError:

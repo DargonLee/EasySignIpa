@@ -34,7 +34,7 @@ class Logger:
         # 控制台处理器
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
-        console_formatter = ColorFormatter('%(asctime)s - %(levelname)s - %(message)s')
+        console_formatter = ColorFormatter('%(levelname)s - %(message)s')
         console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
 

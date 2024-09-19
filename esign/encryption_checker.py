@@ -57,9 +57,8 @@ class EncryptionChecker:
         
     async def remove_unrestrict(self, execu_table_path: str):
         self.logger.info(f"Deleting unrestrict: {execu_table_path}")
-        otool_path = self.config.get_tool_path('otool')
+        otool_path = self.config.get_tool_path('optool')
         cmd = [otool_path, 'unrestrict', '-t', execu_table_path]
-        
         try:
             process = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -67,7 +66,6 @@ class EncryptionChecker:
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
-            if process.returncode != 0:
-                raise EncryptionCheckError(f"Deleting unrestrict fail: {stderr.decode()}")
+            self.logger.default(f"Deleting unrestrict result: {stderr.decode()}")
         except Exception as e:
             raise EncryptionCheckError(f"An error occurred while deleting unrestrict: {str(e)}")

@@ -31,7 +31,7 @@ class AppInstaller:
                 stderr=asyncio.subprocess.PIPE
             )
             async for line in process.stdout:
-                self.logger.info(line.decode().strip())
+                self.logger.default(line.decode().strip())
             async for line in process.stderr:
                 raise AppInstallationError(f"Installation failed: {line.decode().strip()}")
             await process.wait()
