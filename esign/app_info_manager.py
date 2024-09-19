@@ -28,7 +28,7 @@ class AppInfoManager:
             self.logger.error(f"Fail to read Info.plist: {str(e)}")
 
     def print_app_info(self):
-        self.logger.info("app base info")
+        self.logger.info("App info")
         try:
             bundle_info = {
                 "BundleName": self._get_plist_value("CFBundleName"),

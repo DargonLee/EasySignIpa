@@ -15,8 +15,8 @@ class EncryptionChecker:
     async def check_encryption(self, executable_path: str, prepared_app_path: str) -> bool:
         try:
             # 检查主应用程序是否加密
+            self.logger.info(f"App encryption status:")
             is_encrypted = await self.check_app_encryption(executable_path, prepared_app_path)
-            self.logger.info(f"App encryption status: {is_encrypted}")
             # 检查插件是否加密
             plugins_dir = os.path.join(prepared_app_path, "PlugIns")
             if os.path.exists(plugins_dir):
@@ -33,6 +33,7 @@ class EncryptionChecker:
                 'otool -l {} | grep cryptid'.format(executable_path)
             )
             otool_cmd_result = subprocess.getoutput(otool_cmd)
+            self.logger.default(f"{otool_cmd_result.strip()}")
             is_encrypted = 'cryptid 1' in otool_cmd_result
             if is_encrypted and not prepared_app_path.endswith('PlugIns'):
                 raise EncryptionCheckError("The application is encrypted")
@@ -56,7 +57,7 @@ class EncryptionChecker:
             raise EncryptionCheckError(f"An error occurred while checking the plugin encryption status: {str(e)}")
         
     async def remove_unrestrict(self, execu_table_path: str):
-        self.logger.info(f"Deleting unrestrict: {execu_table_path}")
+        self.logger.info(f"Deleting unrestrict: {os.path.basename(execu_table_path)}")
         otool_path = self.config.get_tool_path('optool')
         cmd = [otool_path, 'unrestrict', '-t', execu_table_path]
         try:
@@ -66,6 +67,6 @@ class EncryptionChecker:
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
-            self.logger.default(f"Deleting unrestrict result: {stderr.decode()}")
+            self.logger.default(f"Deleting unrestrict result: {stdout.decode().strip()}")
         except Exception as e:
             raise EncryptionCheckError(f"An error occurred while deleting unrestrict: {str(e)}")

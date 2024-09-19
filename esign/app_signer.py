@@ -66,12 +66,11 @@ class AppSigner:
 
             if options.get('print_info'):
                 app_info_printer.print_info_plist_content()
-            
-            app_info_printer.print_app_info()
 
             if options.get('install') or options.get('reinstall'):
                 await self.app_installer.install(prepared_app_path, options.get('install'), options.get('reinstall'), options.get('device_id'))
-            
+
+            app_info_printer.print_app_info()
             self.logger.info(f"Sign ipa done {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         except Exception as e:
             self.logger.error(f"{str(e)}")
