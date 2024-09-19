@@ -22,7 +22,7 @@ def main():
 
     # Installation options
     sign_parser.add_argument('-d', '--device_id', help='Specify the installation device ID', type=str)
-    group_install = sign_parser.add_mutually_exclusive_group(required=True)
+    group_install = sign_parser.add_mutually_exclusive_group(required=False)
     group_install.add_argument('-b', '--install', help='Install the resigned IPA or APP', action='store_true')
     group_install.add_argument('-rb', '--reinstall', help='Uninstall the existing app with the same name before installing', action='store_true')
 

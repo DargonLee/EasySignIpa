@@ -11,7 +11,7 @@ class IPAPackager:
         self.logger = Logger()
 
     async def package(self, executable_name: str, payload_path: str, output_path: str):
-        self.logger.info("Starting packaging process")
+        self.logger.info("Start packag ipa")
         try:
             output_path = os.path.abspath(output_path)
             if not output_path.endswith('.ipa'):
@@ -19,7 +19,7 @@ class IPAPackager:
             if os.path.exists(output_path):
                 os.remove(output_path)
             await self._create_ipa(payload_path, output_path)
-            self.logger.default(f"IPA successfully packaged: {output_path}")
+            self.logger.default(f"ipa successfully packaged: {output_path}")
         except FileNotFoundError:
             self.logger.error(f"File not found: {payload_path}")
             raise IPAPackagingError(f"Packaging failed, file not found: {payload_path}")
@@ -27,7 +27,7 @@ class IPAPackager:
             self.logger.error(f"Permission denied: {output_path}")
             raise IPAPackagingError(f"Packaging failed, cannot write to: {output_path}")
         except Exception as e:
-            raise IPAPackagingError(f"IPA packaging failed: {str(e)}")
+            raise IPAPackagingError(f"ipa packaging failed: {str(e)}")
 
     async def _create_ipa(self, payload_path: str, output_path: str):
         # 使用 asyncio 的 run_in_executor 来异步处理压缩任务
@@ -50,13 +50,11 @@ class IPAPackager:
         payload_name = os.path.basename(payload_path)
 
         # 打开压缩文件
-        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(payload_path):
+        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as ipa_zip:
+            for root, dirs, files in os.walk(payload_path):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    # 计算文件在压缩包中的相对路径
-                    # 'Payload/DumpApp.app' 应该是根目录下的路径
-                    arcname = os.path.relpath(file_path, parent_dir)
-                    arcname = os.path.join('Payload', payload_name, arcname)
-                    zipf.write(file_path, arcname)
+                    # 在压缩包中的路径应相对于 Payload 目录
+                    arcname = os.path.relpath(file_path, os.path.dirname(payload_path))
+                    ipa_zip.write(file_path, arcname)
 

@@ -35,7 +35,7 @@ class AppSigner:
             payload_path, prepared_app_path = await self.app_preparer.prepare(app_path, options.get('clear_plugins'))
             app_info_printer = AppInfoManager(prepared_app_path)
 
-            executable_name = app_info_printer._get_plist_value("CFBundleExecutable")
+            executable_name = app_info_printer.get_executable_name()
             executable_path = os.path.join(prepared_app_path, executable_name)
 
             # 检查主应用可执行文件是否加密

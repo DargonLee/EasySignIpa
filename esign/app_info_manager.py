@@ -31,10 +31,10 @@ class AppInfoManager:
         self.logger.info("App info")
         try:
             bundle_info = {
-                "BundleName": self._get_plist_value("CFBundleName"),
-                "BundleID": self._get_plist_value("CFBundleIdentifier"),
-                "ShortVersion": self._get_plist_value("CFBundleShortVersionString"),
-                "ExecutableName": self._get_plist_value("CFBundleExecutable")
+                "BundleName": self._get_plist_value(self.info_plist_file_path,"CFBundleName"),
+                "BundleID": self._get_plist_value(self.info_plist_file_path,"CFBundleIdentifier"),
+                "ShortVersion": self._get_plist_value(self.info_plist_file_path,"CFBundleShortVersionString"),
+                "ExecutableName": self._get_plist_value(self.info_plist_file_path,"CFBundleExecutable")
             }
             for key, value in bundle_info.items():
                 self.logger.default(f"[*] {key}: {value}")
@@ -43,24 +43,28 @@ class AppInfoManager:
 
     def modify_bundle_id(self, new_bundle_id: str):
         try:
-            self._set_plist_value("CFBundleIdentifier", new_bundle_id)
-            asyncio.run(self._update_plugin_bundle_id(new_bundle_id))
-            self.logger.info(f"Modifying Bundle ID to: {new_bundle_id}")
+            self.logger.info(f"Modifying Bundle ID:")
+            oldBundleId = self._get_plist_value(self.info_plist_file_path, "CFBundleIdentifier")
+            self._set_plist_value(self.info_plist_file_path,"CFBundleIdentifier", new_bundle_id)
+            self._update_plugin_bundle_id(new_bundle_id)
+            self.logger.default(f"{oldBundleId} to {new_bundle_id}")
         except Exception as e:
             self.logger.error(f"Modifying Bundle ID fail: {str(e)}")
 
     def modify_bundle_name(self, new_bundle_name: str):
         try:
-            self._set_plist_value("CFBundleName", new_bundle_name)
-            self.logger.info(f"Bundle Name successfully changed to: {new_bundle_name}")
+            self.logger.info(f"Modifying Bundle Name:")
+            oldBundleName = self._get_plist_value(self.info_plist_file_path, "CFBundleName")
+            self._set_plist_value(self.info_plist_file_path,"CFBundleName", new_bundle_name)
+            self.logger.default(f"{oldBundleName} to {new_bundle_name}")
         except Exception as e:
             self.logger.error(f"Failed to modify Bundle Name: {str(e)}")
 
-    async def _update_plugin_bundle_id(self, new_bundle_id: str):
+    def _update_plugin_bundle_id(self, new_bundle_id: str):
 
         for directory in [self.plugins_dir, self.extensions_dir]:
             if not os.path.exists(directory):
-                self.logger.error(f"No {os.path.basename(directory)} directory found")
+                self.logger.warning(f"No {os.path.basename(directory)} directory found")
                 continue
 
             for item in os.listdir(directory):
@@ -73,48 +77,26 @@ class AppInfoManager:
                     self.logger.error(f"Info.plist for {item} does not exist")
                     continue
 
-                ori_item_bundle_id = await self._get_bundle_id(item_info_plist)
+                ori_item_bundle_id = self._get_plist_value(item_info_plist, "CFBundleIdentifier")
                 if not ori_item_bundle_id:
                     continue
 
                 item_suffix = ori_item_bundle_id.split('.')[-1]
                 self.logger.info(f"Suffix for {item}: {item_suffix}")
-
                 new_item_bundle_id = f"{new_bundle_id}.{item_suffix}"
-
-                if await self._set_bundle_id(item_info_plist, new_item_bundle_id):
+                if self._set_plist_value(item_info_plist, "CFBundleIdentifier", new_item_bundle_id):
                     self.logger.default(f"Bundle ID for {item} modified: {ori_item_bundle_id} => {new_item_bundle_id}")
                 else:
                     self.logger.error(f"Failed to modify bundle ID for {item}")
-
-    async def _get_bundle_id(self, plist_path):
-        cmd = f'/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "{plist_path}"'
-        process = await asyncio.create_subprocess_shell(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = await process.communicate()
-        if process.returncode != 0:
-            self.logger.error(f"Failed to get bundle ID from {plist_path}: {stderr.decode().strip()}")
-            return None
-        return stdout.decode().strip()
-
-    async def _set_bundle_id(self, plist_path, new_bundle_id):
-        cmd = f'/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier {new_bundle_id}" "{plist_path}"'
-        process = await asyncio.create_subprocess_shell(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        await process.communicate()
-        if process.returncode != 0:
-            self.logger.error(f"Failed to set bundle ID to {new_bundle_id} for {plist_path}")
-            return False
-        return True
- 
-    async def _set_plist_value(self, key: str, value: str):
-        cmd = f'/usr/libexec/PlistBuddy -c "Set :{key} {value}" {self.info_plist_file_path}'
-        process = await asyncio.create_subprocess_shell(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = await process.communicate()
-
-        if process.returncode != 0:
-            raise Exception(f"Failed to set property value: {stderr.decode()}")
-
+    def _set_plist_value(self, plist_path: str, key: str, value: str):
+        cmd = f'/usr/libexec/PlistBuddy -c "Set :{key} {value}" {plist_path}'
+        result = subprocess.getoutput(cmd).strip()
         self.logger.default(f"success modify info.plist: {key} => {value}")
 
-    def _get_plist_value(self, key: str) -> str:
-        cmd = f'/usr/libexec/PlistBuddy -c "Print :{key}" {self.info_plist_file_path}'
+    def _get_plist_value(self, plist_path: str, key: str) -> str:
+        cmd = f'/usr/libexec/PlistBuddy -c "Print :{key}" {plist_path}'
         return subprocess.getoutput(cmd).strip()
+
+    def get_executable_name(self) -> str:
+        executable_name = self._get_plist_value(self.info_plist_file_path, "CFBundleExecutable")
+        return executable_name
