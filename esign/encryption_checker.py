@@ -1,6 +1,8 @@
 import asyncio
 import os
 import shutil
+import subprocess
+
 from esign.elogger import Logger
 from esign.econfig import ConfigHandler
 from esign.exceptions import EncryptionCheckError
@@ -14,44 +16,29 @@ class EncryptionChecker:
         try:
             # 检查主应用程序是否加密
             is_encrypted = await self.check_app_encryption(executable_path, prepared_app_path)
-            if is_encrypted:
-                self.logger.warning(f"主应用程序已加密: {executable_path}")
-            else:
-                self.logger.info(f"主应用程序未加密: {executable_path}")
-
+            self.logger.info(f"App encryption status: {is_encrypted}")
             # 检查插件是否加密
             plugins_dir = os.path.join(prepared_app_path, "PlugIns")
             if os.path.exists(plugins_dir):
                 await self.check_plugins_encryption(plugins_dir)
-
             # 删除 unrestrict
             await self.remove_unrestrict(executable_path)
-
             return is_encrypted
         except Exception as e:
-            raise EncryptionCheckError(f"检测加密状态时发生错误: {str(e)}")
+            raise EncryptionCheckError(f"An error occurred while checking encryption status: {str(e)}")
 
     async def check_app_encryption(self, executable_path: str, prepared_app_path: str) -> bool:
         try:
-            otool_path = self.config.get_tool_path('otool')
-            cmd = [otool_path, '-l', executable_path]
-            
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+            otool_cmd = (
+                'otool -l {} | grep cryptid'.format(executable_path)
             )
-            stdout, stderr = await process.communicate()
-            
-            if process.returncode != 0:
-                raise EncryptionCheckError(f"检查加密状态失败: {stderr.decode()}")
-            
-            output = stdout.decode()
-            is_encrypted = 'cryptid 1' in output
-            
+            otool_cmd_result = subprocess.getoutput(otool_cmd)
+            is_encrypted = 'cryptid 1' in otool_cmd_result
+            if is_encrypted and not prepared_app_path.endswith('PlugIns'):
+                raise EncryptionCheckError("The application is encrypted")
             return is_encrypted
         except Exception as e:
-            raise EncryptionCheckError(f"检查主应用程序加密状态时发生错误: {str(e)}")
+            raise EncryptionCheckError(str(e))
 
     async def check_plugins_encryption(self, plugins_dir: str):
         try:
@@ -63,13 +50,13 @@ class EncryptionChecker:
                     if os.path.exists(plugin_executable_path):
                         is_encrypted = await self.check_app_encryption(plugin_executable_path, plugins_dir)
                         if is_encrypted:
-                            self.logger.warning(f"插件 {plugin} 已加密，将被移除")
+                            self.logger.warning(f"Plugin {plugin} is encrypted and will be removed")
                             shutil.rmtree(plugin_path)
         except Exception as e:
-            raise EncryptionCheckError(f"检查插件加密状态时发生错误: {str(e)}")
+            raise EncryptionCheckError(f"An error occurred while checking the plugin encryption status: {str(e)}")
         
     async def remove_unrestrict(self, execu_table_path: str):
-        self.logger.info(f"开始删除 unrestrict: {execu_table_path}")
+        self.logger.info(f"Deleting unrestrict: {execu_table_path}")
         otool_path = self.config.get_tool_path('otool')
         cmd = [otool_path, 'unrestrict', '-t', execu_table_path]
         
@@ -80,10 +67,7 @@ class EncryptionChecker:
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
-            
             if process.returncode != 0:
-                raise EncryptionCheckError(f"删除 unrestrict 失败: {stderr.decode()}")
-            
-            self.logger.info(f"删除 unrestrict 成功: {stdout.decode()}")
+                raise EncryptionCheckError(f"Deleting unrestrict fail: {stderr.decode()}")
         except Exception as e:
-            raise EncryptionCheckError(f"删除 unrestrict 时发生错误: {str(e)}")
+            raise EncryptionCheckError(f"An error occurred while deleting unrestrict: {str(e)}")

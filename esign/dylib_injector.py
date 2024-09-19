@@ -12,6 +12,7 @@ class DylibInjector:
         self.logger = Logger()
 
     async def inject(self, app_path: str, paths: list):
+        self.logger.info(f"Injecting dynamic libraries: {paths}")
         try:
             executable_path = self._get_executable_path(app_path)
             for path in paths:
@@ -20,10 +21,9 @@ class DylibInjector:
                 elif path.endswith('.framework'):
                     await self._inject_framework(executable_path, path)
                 else:
-                    raise DylibInjectionError(f"不支持的文件类型: {path}")
+                    raise DylibInjectionError(f"Unsupported file type: {path}")
         except Exception as e:
-            raise DylibInjectionError(f"动态库注入失败: {str(e)}")
-
+            raise DylibInjectionError(f"Failed to inject dynamic library: {str(e)}")
     def _get_executable_path(self, app_path: str) -> str:
         plist_path = os.path.join(app_path, 'Info.plist')
         cmd = f"/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' {plist_path}"
@@ -46,11 +46,10 @@ class DylibInjector:
         cmd = f"{optool_path} install -c load -p '@executable_path/Frameworks/{framework_name}/{framework_name[:-10]}' -t {executable_path}"
         process = await asyncio.create_subprocess_shell(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = await process.communicate()
-        
+
         if process.returncode != 0:
-            raise DylibInjectionError(f"注入失败 {framework_path}: {stderr.decode()}")
-        
-        self.logger.info(f"成功注入框架: {framework_name}")
+            raise DylibInjectionError(f"Injection failed for {framework_path}: {stderr.decode()}")
+        self.logger.info(f"Successfully injected framework: {framework_name}")
 
     async def _inject_dylib(self, executable_path: str, dylib_path: str):
         dylib_name = os.path.basename(dylib_path)
@@ -65,6 +64,5 @@ class DylibInjector:
         stdout, stderr = await process.communicate()
         
         if process.returncode != 0:
-            raise DylibInjectionError(f"注入失败 {dylib_name}: {stderr.decode()}")
-        
-        self.logger.info(f"成功注入动态库: {dylib_name}")
+            raise DylibInjectionError(f"Injection failed for {dylib_name}: {stderr.decode()}")
+        self.logger.info(f"Successfully injected dynamic library: {dylib_name}")
