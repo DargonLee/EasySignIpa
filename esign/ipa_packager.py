@@ -11,7 +11,7 @@ class IPAPackager:
         self.logger = Logger()
 
     async def package(self, executable_name: str, payload_path: str, output_path: str):
-        self.logger.info("Start packag ipa")
+        self.logger.info("Start package ipa")
         try:
             output_path = os.path.abspath(output_path)
             if not output_path.endswith('.ipa'):

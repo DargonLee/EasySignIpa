@@ -40,7 +40,7 @@ class CodeSigning:
 
     async def _codesign(self, path: str, identity: str, entitlements_path: str):
         if entitlements_path:
-            cmd = f"codesign -f -s {identity} --entitlements {entitlements_path} {path}"
+            cmd = f"codesign -f -s {identity} --no-strict  --entitlements {entitlements_path} {path}"
         else:
             cmd = f"codesign -f -s {identity} {path}"
         process = await asyncio.create_subprocess_shell(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

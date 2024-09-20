@@ -23,6 +23,8 @@ class AppInstaller:
 
             if device_id:
                 cmd.extend(['--id', device_id])
+
+            cmd.extend(['-W'])
             
             self.logger.info("Installing application")
             process = await asyncio.create_subprocess_exec(

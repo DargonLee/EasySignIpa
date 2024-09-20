@@ -37,7 +37,7 @@ class AppInfoManager:
                 "ExecutableName": self._get_plist_value(self.info_plist_file_path,"CFBundleExecutable")
             }
             for key, value in bundle_info.items():
-                self.logger.default(f"[*] {key}: {value}")
+                self.logger.default(f"{key}: {value}")
         except Exception as e:
             self.logger.error(f"Failed to retrieve application information: {str(e)}")
 
