@@ -31,10 +31,11 @@ class AppInfoManager:
         self.logger.info("App info")
         try:
             bundle_info = {
-                "BundleName": self._get_plist_value(self.info_plist_file_path,"CFBundleName"),
-                "BundleID": self._get_plist_value(self.info_plist_file_path,"CFBundleIdentifier"),
-                "ShortVersion": self._get_plist_value(self.info_plist_file_path,"CFBundleShortVersionString"),
-                "ExecutableName": self._get_plist_value(self.info_plist_file_path,"CFBundleExecutable")
+                "BundleName": self.get_bundle_name(),
+                "BundleID": self.get_bundle_id(),
+                "ShortVersion": self.get_short_version(),
+                "ExecutableName": self.get_executable_name(),
+                "BundleVersion": self.get_bundle_version()
             }
             for key, value in bundle_info.items():
                 self.logger.default(f"{key}: {value}")
@@ -59,6 +60,27 @@ class AppInfoManager:
             self.logger.default(f"{oldBundleName} to {new_bundle_name}")
         except Exception as e:
             self.logger.error(f"Failed to modify Bundle Name: {str(e)}")
+
+    
+    def get_executable_name(self) -> str:
+        executable_name = self._get_plist_value(self.info_plist_file_path, "CFBundleExecutable")
+        return executable_name
+
+    def get_bundle_name(self) -> str:
+        bundle_name = self._get_plist_value(self.info_plist_file_path, "CFBundleName")
+        return bundle_name
+
+    def get_bundle_id(self) -> str:
+        bundle_id = self._get_plist_value(self.info_plist_file_path, "CFBundleIdentifier")
+        return bundle_id
+
+    def get_short_version(self) -> str:
+        short_version = self._get_plist_value(self.info_plist_file_path, "CFBundleShortVersionString")
+        return short_version
+
+    def get_bundle_version(self) -> str:
+        bundle_version = self._get_plist_value(self.info_plist_file_path, "CFBundleVersion")
+        return bundle_version
 
     def _update_plugin_bundle_id(self, new_bundle_id: str):
 
@@ -88,6 +110,7 @@ class AppInfoManager:
                     self.logger.default(f"Bundle ID for {item} modified: {ori_item_bundle_id} => {new_item_bundle_id}")
                 else:
                     self.logger.error(f"Failed to modify bundle ID for {item}")
+                    
     def _set_plist_value(self, plist_path: str, key: str, value: str):
         cmd = f'/usr/libexec/PlistBuddy -c "Set :{key} {value}" {plist_path}'
         result = subprocess.getoutput(cmd).strip()
@@ -96,7 +119,3 @@ class AppInfoManager:
     def _get_plist_value(self, plist_path: str, key: str) -> str:
         cmd = f'/usr/libexec/PlistBuddy -c "Print :{key}" {plist_path}'
         return subprocess.getoutput(cmd).strip()
-
-    def get_executable_name(self) -> str:
-        executable_name = self._get_plist_value(self.info_plist_file_path, "CFBundleExecutable")
-        return executable_name
