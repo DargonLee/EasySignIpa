@@ -32,7 +32,7 @@ class AppSigner:
 
     async def resign(self, app_path: str, options: Dict[str, any]):
         try:
-            payload_path, prepared_app_path = await self.app_preparer.prepare(app_path, options.get('clear_plugins'))
+            payload_path, prepared_app_path = await self.app_preparer.prepare(app_path, options.get('no_clear_plugins'))
             app_info_printer = AppInfoManager(prepared_app_path)
 
             executable_name = app_info_printer.get_executable_name()

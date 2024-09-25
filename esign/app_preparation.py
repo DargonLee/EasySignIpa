@@ -10,11 +10,12 @@ from esign.exceptions import AppPreparationError
 class AppPreparation:
     def __init__(self, config: ConfigHandler):
         self.config = config
-        self.clear_plugins = False
+        self.no_clear_plugins = True
         self.logger = Logger()
 
-    async def prepare(self, app_path: str, clear_plugins: bool = False) -> Tuple[str, str]:
-        self.clear_plugins = clear_plugins
+    async def prepare(self, app_path: str, no_clear_plugins) -> Tuple[str, str]:
+
+        self.no_clear_plugins = no_clear_plugins
 
         try:
             self.logger.info(f"Preparing: {app_path}")
@@ -59,11 +60,12 @@ class AppPreparation:
         return payload_path, os.path.join(payload_path, os.path.basename(app_path))
 
     async def _clean_app(self, app_path: str):
-        dirs_to_remove = ['SC_Info', 'Watch', '_CodeSignature']
+        dirs_to_remove = ['SC_Info', 'Watch', '_CodeSignature', 'PlugIns', 'Extensions']
         files_to_remove = ['.DS_Store']
 
-        if self.clear_plugins:
-            dirs_to_remove.extend(['PlugIns', 'Extensions'])
+        if self.no_clear_plugins:
+            dirs_to_remove.remove('PlugIns')
+            dirs_to_remove.remove('Extensions')
 
         for dir_name in dirs_to_remove:
             dir_path = os.path.join(app_path, dir_name)

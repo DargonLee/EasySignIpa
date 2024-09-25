@@ -18,7 +18,7 @@ def main():
     sign_parser.add_argument('--bundle_name', help='Modify the application display name', type=str)
     sign_parser.add_argument('--info', help='Print the contents of Info.plist', action='store_true')
     sign_parser.add_argument('--symbol', help='Restore symbol table', action='store_true')
-    sign_parser.add_argument('--clear_plugins', help='Clear the plugins folder', action='store_true', default=True)
+    sign_parser.add_argument('--no_clear_plugins', help='Do not clear the plugins folder', action='store_true')
 
     # Installation options
     sign_parser.add_argument('-d', '--device_id', help='Specify the installation device ID', type=str)
