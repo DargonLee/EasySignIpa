@@ -23,12 +23,12 @@ class EntitlementsManager:
 
         try:
             entitlements = await self._extract_entitlements(provisioning_profile_path)
-            app_entitlements = await self._extract_app_entitlements(app_path)
+            # app_entitlements = await self._extract_app_entitlements(app_path)
 
             # entitlements.update(app_entitlements)
-            for key, value in app_entitlements.items():
-                if key not in entitlements:
-                    entitlements[key] = value
+            # for key, value in app_entitlements.items():
+            #     if key not in entitlements:
+            #         entitlements[key] = value
 
             entitlements_path = await self._update_entitlements(entitlements)
             shutil.copy(provisioning_profile_path, os.path.join(app_path, 'embedded.mobileprovision'))

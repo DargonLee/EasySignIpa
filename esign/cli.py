@@ -53,7 +53,7 @@ def main():
             'restore_symbol': args.symbol,
             'install': args.install,
             'reinstall': args.reinstall,
-            'clear_plugins': args.clear_plugins,
+            'no_clear_plugins': args.no_clear_plugins,
         }
         signer.run(args.file, options)
     elif args.command == "update":

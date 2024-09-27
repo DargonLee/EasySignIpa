@@ -34,7 +34,7 @@ class AppSigner:
         try:
             payload_path, prepared_app_path = await self.app_preparer.prepare(app_path, options.get('no_clear_plugins'))
             app_info_printer = AppInfoManager(prepared_app_path)
-
+            app_info_printer.delete_support_devices()
             executable_name = app_info_printer.get_executable_name()
             executable_path = os.path.join(prepared_app_path, executable_name)
 

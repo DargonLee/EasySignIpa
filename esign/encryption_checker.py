@@ -2,6 +2,7 @@ import asyncio
 import os
 import shutil
 import subprocess
+from turtle import st
 
 from esign.elogger import Logger
 from esign.econfig import ConfigHandler
@@ -21,6 +22,10 @@ class EncryptionChecker:
             plugins_dir = os.path.join(prepared_app_path, "PlugIns")
             if os.path.exists(plugins_dir):
                 await self.check_plugins_encryption(plugins_dir)
+            # 检查Frameworks是否加密
+            frameworks_dir = os.path.join(prepared_app_path, "Frameworks")
+            if os.path.exists(frameworks_dir):
+                await self.check_frameworks_encryption(frameworks_dir)
             # 删除 unrestrict
             await self.remove_unrestrict(executable_path)
             return is_encrypted
@@ -33,13 +38,30 @@ class EncryptionChecker:
                 'otool -l {} | grep cryptid'.format(executable_path)
             )
             otool_cmd_result = subprocess.getoutput(otool_cmd)
-            self.logger.default(f"{otool_cmd_result.strip()}")
             is_encrypted = 'cryptid 1' in otool_cmd_result
-            if is_encrypted and not prepared_app_path.endswith('PlugIns'):
+            is_invalid_path = any(substring in prepared_app_path for substring in ['PlugIns', 'Frameworks'])
+            if is_encrypted and not is_invalid_path:
                 raise EncryptionCheckError("The application is encrypted")
             return is_encrypted
         except Exception as e:
             raise EncryptionCheckError(str(e))
+
+    async def check_frameworks_encryption(self, framework_dir: str):
+        try:
+            for framework in os.listdir(framework_dir):
+                framework_path = os.path.join(framework_dir, framework)
+                if os.path.isdir(framework_path):
+                    framework_executable = os.path.splitext(framework)[0]
+                    framework_executable_path = os.path.join(framework_path, framework_executable)
+                    if os.path.exists(framework_executable_path):
+                        is_encrypted = await self.check_app_encryption(framework_executable_path, framework_dir)
+                        if is_encrypted:
+                            self.logger.warning(f"Framework encrypted: {framework}")
+                        else:
+                            self.logger.default(f"Framework not encrypted: {framework} ")
+        except Exception as e:
+            raise EncryptionCheckError(f"An error occurred while checking the framework encryption status: {str(e)}")
+        
 
     async def check_plugins_encryption(self, plugins_dir: str):
         try:
@@ -51,8 +73,9 @@ class EncryptionChecker:
                     if os.path.exists(plugin_executable_path):
                         is_encrypted = await self.check_app_encryption(plugin_executable_path, plugins_dir)
                         if is_encrypted:
-                            self.logger.warning(f"Plugin {plugin} is encrypted and will be removed")
+                            self.logger.warning(f"Plugin encrypted: {plugin} will be removed")
                             shutil.rmtree(plugin_path)
+                        self.logger.default(f"PlugIn not encrypted: {plugin} ")
         except Exception as e:
             raise EncryptionCheckError(f"An error occurred while checking the plugin encryption status: {str(e)}")
         

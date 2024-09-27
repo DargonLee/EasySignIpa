@@ -71,10 +71,10 @@ class AppPreparation:
             dir_path = os.path.join(app_path, dir_name)
             if os.path.exists(dir_path):
                 shutil.rmtree(dir_path)
-                self.logger.default(f"Deleting directory: {dir_name}")
+                self.logger.default(f"Deleting: directory: {dir_name}")
 
         for file_name in files_to_remove:
             file_path = os.path.join(app_path, file_name)
             if os.path.exists(file_path):
                 os.remove(file_path)
-                self.logger.default(f"Deleting file: {file_name}")
+                self.logger.default(f"Deleting: file: {file_name}")
