@@ -62,7 +62,7 @@ class AppInfoManager:
 
     def delete_support_devices(self):
         self._delete_item_value(self.info_plist_file_path, "UISupportedDevices")
-        self.logger.default(f"Deleting: UISupportedDevices")
+        self.logger.default(f"Deleting: Info.plist: UISupportedDevices")
 
     def read_info_content(self):
         try:
