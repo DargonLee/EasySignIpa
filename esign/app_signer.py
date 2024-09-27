@@ -3,7 +3,6 @@ import datetime
 import os
 from typing import Dict
 
-from regex import F
 from esign.app_preparation import AppPreparation
 from esign.code_signing import CodeSigning
 from esign.econfig import ConfigHandler
@@ -11,7 +10,6 @@ from esign.dylib_injector import DylibInjector
 from esign.entitlements_manager import EntitlementsManager
 from esign.ipa_packager import IPAPackager
 from esign.elogger import Logger
-from esign.exceptions import ESignError
 from esign.app_info_manager import AppInfoManager
 from esign.app_installer import AppInstaller
 from esign.symbol_restorer import SymbolRestorer

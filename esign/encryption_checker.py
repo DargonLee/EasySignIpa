@@ -2,7 +2,6 @@ import asyncio
 import os
 import shutil
 import subprocess
-from turtle import st
 
 from esign.elogger import Logger
 from esign.econfig import ConfigHandler

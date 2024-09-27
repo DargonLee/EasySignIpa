@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import plistlib
@@ -63,6 +62,15 @@ class AppInfoManager:
 
     def delete_support_devices(self):
         self._delete_item_value(self.info_plist_file_path, "UISupportedDevices")
+        self.logger.default(f"Deleting: UISupportedDevices")
+
+    def read_info_content(self):
+        try:
+            with open(self.info_plist_file_path, 'rb') as f:
+                plist_content = plistlib.load(f)
+                self.logger.info(f"Info.plist content: {plist_content}")
+        except Exception as e:
+            self.logger.error(f"Failed to read Info.plist content: {str(e)}")
 
     def get_executable_name(self) -> str:
         executable_name = self._get_plist_value(self.info_plist_file_path, "CFBundleExecutable")
@@ -124,4 +132,4 @@ class AppInfoManager:
     
     def _delete_item_value(self, plist_path: str, key: str):
         cmd = f'/usr/libexec/PlistBuddy -c "Delete :{key}" {plist_path}'
-        subprocess.getoutput(cmd).strip()
+        return subprocess.getoutput(cmd).strip()
