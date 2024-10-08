@@ -17,10 +17,16 @@ class EncryptionChecker:
             # 检查主应用程序是否加密
             self.logger.info(f"App encryption status:")
             is_encrypted = await self.check_app_encryption(executable_path, prepared_app_path)
-            # 检查插件是否加密
+            if not is_encrypted:
+                self.logger.default("The application is not encrypted")
+            # 检查插件是否加密 PlugIns
             plugins_dir = os.path.join(prepared_app_path, "PlugIns")
             if os.path.exists(plugins_dir):
                 await self.check_plugins_encryption(plugins_dir)
+            # 检查插件是否加密 Extensions
+            extension_dir = os.path.join(prepared_app_path, "Extensions")
+            if os.path.exists(extension_dir):
+                await self.check_extensions_encryption(extension_dir)
             # 检查Frameworks是否加密
             frameworks_dir = os.path.join(prepared_app_path, "Frameworks")
             if os.path.exists(frameworks_dir):
@@ -38,7 +44,7 @@ class EncryptionChecker:
             )
             otool_cmd_result = subprocess.getoutput(otool_cmd)
             is_encrypted = 'cryptid 1' in otool_cmd_result
-            is_invalid_path = any(substring in prepared_app_path for substring in ['PlugIns', 'Frameworks'])
+            is_invalid_path = any(substring in prepared_app_path for substring in ['PlugIns', 'Frameworks', 'Extensions'])
             if is_encrypted and not is_invalid_path:
                 raise EncryptionCheckError("The application is encrypted")
             return is_encrypted
@@ -77,7 +83,23 @@ class EncryptionChecker:
                         self.logger.default(f"PlugIn not encrypted: {plugin} ")
         except Exception as e:
             raise EncryptionCheckError(f"An error occurred while checking the plugin encryption status: {str(e)}")
-        
+
+    async def check_extensions_encryption(self, extensions_dir: str):
+        try:
+            for extension in os.listdir(extensions_dir):
+                extension_path = os.path.join(extensions_dir, extension)
+                if os.path.isdir(extension_path):
+                    extension_executable = os.path.splitext(extension)[0]
+                    extension_executable_path = os.path.join(extension_path, extension_executable)
+                    if os.path.exists(extension_executable_path):
+                        is_encrypted = await self.check_app_encryption(extension_executable_path, extensions_dir)
+                        if is_encrypted:
+                            self.logger.warning(f"Extensions encrypted: {extension} will be removed")
+                            shutil.rmtree(extension_path)
+                        self.logger.default(f"Extensions not encrypted: {extension} ")
+        except Exception as e:
+            raise EncryptionCheckError(f"An error occurred while checking the Extensions encryption status: {str(e)}")
+
     async def remove_unrestrict(self, execu_table_path: str):
         self.logger.info(f"Deleting unrestrict: {os.path.basename(execu_table_path)}")
         otool_path = self.config.get_tool_path('optool')

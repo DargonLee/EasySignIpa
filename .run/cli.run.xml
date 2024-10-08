@@ -13,7 +13,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="esign" />
-    <option name="PARAMETERS" value="sign -f $USER_HOME$/Downloads/Payload3/GitHub.app -b" />
+    <option name="PARAMETERS" value="sign -f $USER_HOME$/Downloads/Payload4/NewT66y.app -b" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="true" />
