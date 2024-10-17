@@ -64,9 +64,17 @@ class EncryptionChecker:
                             self.logger.warning(f"Framework encrypted: {framework}")
                         else:
                             self.logger.default(f"Framework not encrypted: {framework} ")
+                elif framework_path.endswith('.dylib'):
+                    if os.path.exists(framework_path):
+                        is_encrypted = await self.check_app_encryption(framework_path, framework_dir)
+                        if is_encrypted:
+                            self.logger.warning(f"dylib encrypted: {framework}")
+                        else:
+                            self.logger.default(f"dylib not encrypted: {framework} ")
+
         except Exception as e:
             raise EncryptionCheckError(f"An error occurred while checking the framework encryption status: {str(e)}")
-        
+
 
     async def check_plugins_encryption(self, plugins_dir: str):
         try:
