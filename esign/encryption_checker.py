@@ -53,8 +53,22 @@ class EncryptionChecker:
 
     async def check_frameworks_encryption(self, framework_dir: str):
         try:
+            # 先处理所有的 .dylib 文件
             for framework in os.listdir(framework_dir):
                 framework_path = os.path.join(framework_dir, framework)
+                
+                if framework_path.endswith('.dylib'):
+                    if os.path.exists(framework_path):
+                        is_encrypted = await self.check_app_encryption(framework_path, framework_dir)
+                        if is_encrypted:
+                            self.logger.warning(f"dylib encrypted: {framework}")
+                        else:
+                            self.logger.default(f"dylib not encrypted: {framework} ")
+
+            # 再处理所有的 Framework 目录
+            for framework in os.listdir(framework_dir):
+                framework_path = os.path.join(framework_dir, framework)
+                
                 if os.path.isdir(framework_path):
                     framework_executable = os.path.splitext(framework)[0]
                     framework_executable_path = os.path.join(framework_path, framework_executable)
@@ -64,13 +78,6 @@ class EncryptionChecker:
                             self.logger.warning(f"Framework encrypted: {framework}")
                         else:
                             self.logger.default(f"Framework not encrypted: {framework} ")
-                elif framework_path.endswith('.dylib'):
-                    if os.path.exists(framework_path):
-                        is_encrypted = await self.check_app_encryption(framework_path, framework_dir)
-                        if is_encrypted:
-                            self.logger.warning(f"dylib encrypted: {framework}")
-                        else:
-                            self.logger.default(f"dylib not encrypted: {framework} ")
 
         except Exception as e:
             raise EncryptionCheckError(f"An error occurred while checking the framework encryption status: {str(e)}")
