@@ -18,7 +18,7 @@ class EncryptionChecker:
             self.logger.info(f"App encryption status:")
             is_encrypted = await self.check_app_encryption(executable_path, prepared_app_path)
             if not is_encrypted:
-                self.logger.default("The application is not encrypted")
+                self.logger.default("App not encrypted")
             # 检查插件是否加密 PlugIns
             plugins_dir = os.path.join(prepared_app_path, "PlugIns")
             if os.path.exists(plugins_dir):
